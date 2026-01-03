@@ -12,7 +12,7 @@ function createWindow() {
     },
   });
 
-  win.loadFile("renderer/login.html");
+  win.loadFile("index.html");
 }
 
 app.whenReady().then(createWindow);

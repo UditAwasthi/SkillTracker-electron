@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillTracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+            letter-spacing: -0.03em;
+        }
+
+        .squircle { border-radius: 38px; }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .text-display {
+            font-size: clamp(3rem, 9vw, 9rem);
+            line-height: 0.85;
+            font-weight: 800;
+            letter-spacing: -0.06em;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-ui { animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col justify-between overflow-hidden">
+
+    <nav class="flex justify-between items-center px-10 py-8 relative z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-5 h-5 bg-white rounded-[5px]"></div>
+            <span class="font-bold text-sm tracking-tight">SkillTracker</span>
+        </div>
+        
+        <div class="flex items-center gap-6">
+            <span class="text-[11px] font-medium text-white/30 uppercase tracking-widest">Version 1.0.4</span>
+            <button class="glass px-6 py-2.5 squircle text-xs font-semibold hover:bg-white hover:text-black transition-all duration-500">
+                Log In
+            </button>
+        </div>
+    </nav>
+
+    <main class="px-10 flex-1 flex flex-col justify-center">
+        <div class="animate-ui">
+            <h1 class="text-display">
+                LEARN <br> 
+                <span class="text-white/20 italic">ANYTHING.</span>
+            </h1>
+            
+            <p class="max-w-xl mt-10 text-xl font-light leading-relaxed text-white/50">
+                A streamlined environment designed for pure acquisition. Construct your path through any discipline with AI-powered mentorship.
+            </p>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4 mt-16 animate-ui" style="animation-delay: 0.1s;">
+            <div class="glass squircle p-8 flex-1 group cursor-pointer hover:bg-white/5 transition-all">
+                <div class="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-10">Interface</div>
+                <div class="flex justify-between items-end">
+                    <h2 class="text-2xl font-semibold leading-tight">Prompt your <br>mentor.</h2>
+                    <div class="text-2xl opacity-0 group-hover:opacity-100 transition-opacity">→</div>
+                </div>
+            </div>
+
+            <div class="bg-white squircle p-8 flex-1 group cursor-pointer hover:opacity-90 transition-all">
+                <div class="text-[10px] font-bold text-black/30 uppercase tracking-widest mb-10">Access</div>
+                <div class="flex justify-between items-end">
+                    <h2 class="text-2xl font-black text-black leading-tight">Start the <br>session.</h2>
+                    <div class="text-2xl text-black">→</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="px-10 py-10 flex justify-between items-center animate-ui" style="animation-delay: 0.3s;">
+        <div class="flex gap-10">
+            <div class="space-y-1">
+                <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Logic</p>
+                <p class="text-xs text-white/40">Neural Path Generation</p>
+            </div>
+            <div class="space-y-1">
+                <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Engine</p>
+                <p class="text-xs text-white/40">Gemini 1.5 Pro</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="h-[1px] w-12 bg-white/10"></div>
+            <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Obsidian Edition</span>
+        </div>
+    </footer>
+
+    <div class="fixed -bottom-[20%] -right-[10%] w-[50%] h-[50%] bg-white/[0.02] rounded-full blur-[120px] pointer-events-none"></div>
+
+</body>
+</html>
