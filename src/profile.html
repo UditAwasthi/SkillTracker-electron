@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Identity | SkillTracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="app.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+            letter-spacing: -0.03em;
+        }
+
+        .squircle { border-radius: 38px; }
+        .glass {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .input-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .input-pill:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        [x-cloak] { display: none !important; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-ui { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body class="antialiased min-h-screen" x-data="{ 
+    user: JSON.parse(localStorage.getItem('user') || '{}'),
+    isEditing: false,
+    isLoading: false,
+    newName: '',
+    stats: { learning: 3, completed: 12, time: '42h', streak: 12 },
+
+    init() {
+        if (!localStorage.getItem('token')) window.location.href = 'auth.html';
+        this.newName = this.user.username;
+    },
+
+    async saveProfile() {
+        if (!this.newName || this.newName === this.user.username) {
+            this.isEditing = false;
+            return;
+        }
+        
+        this.isLoading = true;
+        try {
+            // Calling the function in your app.js
+            await updateUsername(this.user.id, this.newName);
+            
+            // Re-sync local state after successful update
+            this.user = JSON.parse(localStorage.getItem('user'));
+            this.isEditing = false;
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            this.isLoading = false;
+        }
+    }
+}">
+
+    <nav class="flex justify-between items-center px-10 py-10 relative z-50">
+        <a href="dashboard.html" class="flex items-center gap-3 group">
+            <span class="text-white/20 group-hover:text-white transition-colors">←</span>
+            <span class="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Back to Terminal</span>
+        </a>
+        <div class="flex items-center gap-6">
+            <button @click="isEditing = !isEditing" 
+                    class="text-[10px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
+                    x-text="isEditing ? 'Cancel' : 'Modify Identity'"></button>
+            <button onclick="logout()" class="text-[10px] font-bold uppercase tracking-widest text-red-500/40 hover:text-red-500 transition-colors">Terminate</button>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto px-10 py-12 animate-ui">
+        
+        <header class="flex flex-col items-center mb-20">
+            <div class="w-32 h-32 bg-white squircle flex items-center justify-center text-black text-5xl font-black mb-8">
+                <span x-text="user.username ? user.username[0].toUpperCase() : 'U'"></span>
+            </div>
+
+            <div class="text-center space-y-2" x-show="!isEditing">
+                <h1 class="text-5xl font-black tracking-tighter uppercase" x-text="user.username"></h1>
+                <p class="text-white/20 font-medium tracking-wide" x-text="user.email"></p>
+            </div>
+
+            <div class="w-full max-w-xs space-y-4 text-center" x-show="isEditing" x-cloak>
+                <input x-model="newName" type="text" class="input-pill w-full text-center text-lg font-bold">
+                <button @click="saveProfile()" 
+                        :disabled="isLoading"
+                        class="w-full bg-white text-black py-4 squircle text-xs font-black uppercase tracking-[0.2em] hover:bg-white/90 transition-all disabled:opacity-50">
+                    <span x-text="isLoading ? 'Syncing...' : 'Push Updates'"></span>
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="glass squircle p-8 text-center border-white/5">
+                <p class="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] mb-4">In Progress</p>
+                <p class="text-4xl font-bold tracking-tighter" x-text="stats.learning"></p>
+            </div>
+            <div class="glass squircle p-8 text-center border-white/5">
+                <p class="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] mb-4">Completed</p>
+                <p class="text-4xl font-bold tracking-tighter" x-text="stats.completed"></p>
+            </div>
+            <div class="glass squircle p-8 text-center border-white/5">
+                <p class="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] mb-4">Focus Time</p>
+                <p class="text-4xl font-bold tracking-tighter" x-text="stats.time"></p>
+            </div>
+            <div class="glass squircle p-8 text-center border-white/[0.15]">
+                <p class="text-[9px] font-bold text-white/40 uppercase tracking-[0.2em] mb-4">Streak</p>
+                <p class="text-4xl font-bold tracking-tighter flex items-center justify-center gap-1">
+                    <span x-text="stats.streak"></span>
+                    <span class="text-[10px] text-white/20">DAYS</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-24 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center opacity-20">
+            <div class="text-[10px] font-bold uppercase tracking-widest">User UUID: <span x-text="user.id"></span></div>
+            <div class="text-[10px] font-bold uppercase tracking-widest">SkillTracker Engine v1.0</div>
+        </div>
+    </main>
+
+    <div class="fixed top-0 left-0 w-full h-full pointer-events-none">
+        <div class="absolute top-[10%] right-[10%] w-[400px] h-[400px] bg-white/[0.02] rounded-full blur-[120px]"></div>
+    </div>
+
+</body>
+</html>

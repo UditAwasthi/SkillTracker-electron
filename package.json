@@ -1,24 +1,21 @@
 {
-  "name": "skilltracker-desktop",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "AI-Powered Mentorship Suite",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron .",
+    "build": "electron-builder"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/UditAwasthi/SkillTracker-electron.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/UditAwasthi/SkillTracker-electron/issues"
-  },
-  "homepage": "https://github.com/UditAwasthi/SkillTracker-electron#readme",
-  "dependencies": {
-    "electron": "^39.2.7"
+  "keywords": [
+    "AI",
+    "Mentorship",
+    "Learning",
+    "Productivity"
+  ],
+  "author": "SkillTracker Labs",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
   }
 }
