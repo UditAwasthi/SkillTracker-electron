@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkillTracker | Productivity Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap");
+        body { font-family: "Plus Jakarta Sans", sans-serif; background: #000; color: #fff; letter-spacing: -0.03em; transition: all 0.5s ease; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(40px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .squircle { border-radius: 24px; }
+        
+        /* ZEN MODE ACTIVE */
+        body.zen-active { background: #050505; }
+        body.zen-active nav, body.zen-active .sidebar { opacity: 0; pointer-events: none; }
+        body.zen-active .zen-card { transform: scale(1.1); border-color: rgba(99, 102, 241, 0.3); }
+
+        .todo-item.completed span { text-decoration: line-through; opacity: 0.3; }
+        
+        @keyframes pulse-indigo {
+            0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+        .pulse { animation: pulse-indigo 2s infinite; }
+    </style>
+</head>
+<body class="antialiased min-h-screen">
+
+    <nav class="flex justify-between items-center px-10 py-8 relative z-50 transition-opacity duration-500">
+        <div class="flex items-center gap-3">
+            <a href="dashboard.html" class="w-5 h-5 bg-white rounded-[5px]"></a>
+            <span class="font-bold text-sm tracking-tight uppercase">SkillTracker</span>
+        </div>
+        <div class="flex gap-8 text-[10px] font-bold text-white/40 uppercase tracking-widest">
+            <a href="dashboard.html" class="hover:text-white transition">Vectors</a>
+            <a href="productivity.html" class="text-white">Productivity</a>
+            <a href="profile.html" class="hover:text-white transition">Profile</a>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-6 py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <div class="lg:col-span-5 space-y-6 sidebar transition-opacity duration-500">
+                <div class="glass squircle p-8 border-l-4 border-indigo-500">
+                    <h2 class="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em] mb-6">Neural Tasks</h2>
+                    <div class="flex gap-2 mb-6">
+                        <input id="todoInput" type="text" placeholder="Add a focus objective..." 
+                               class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-500 transition">
+                        <button onclick="addTodo()" class="bg-white text-black px-4 rounded-xl font-bold text-xl hover:bg-neutral-200">+</button>
+                    </div>
+                    <ul id="todoList" class="space-y-3">
+                        </ul>
+                </div>
+
+                <div class="glass squircle p-8">
+                    <h2 class="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em] mb-4">Focus Matrix</h2>
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/5">
+                            <p class="text-[9px] text-white/20 uppercase mb-1">Deep Sessions</p>
+                            <p id="sessionCount" class="text-xl font-bold">0</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/5">
+                            <p class="text-[9px] text-white/20 uppercase mb-1">Tasks Nuked</p>
+                            <p id="tasksNuked" class="text-xl font-bold">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7">
+                <div class="zen-card glass squircle p-12 flex flex-col items-center justify-center text-center h-full min-h-[500px] transition-all duration-700 relative overflow-hidden">
+                    <div id="zenGlow" class="absolute inset-0 bg-indigo-600/5 opacity-0 transition-opacity duration-1000"></div>
+                    
+                    <h2 id="zenStatus" class="text-[10px] font-bold text-white/20 uppercase tracking-[0.5em] mb-12">System Ready</h2>
+                    
+                    <div class="relative mb-12">
+                        <svg class="w-64 h-64 -rotate-90">
+                            <circle cx="128" cy="128" r="120" stroke="currentColor" stroke-width="2" fill="transparent" class="text-white/5"/>
+                            <circle id="timerCircle" cx="128" cy="128" r="120" stroke="currentColor" stroke-width="2" fill="transparent" 
+                                    class="text-indigo-500 transition-all duration-1000" stroke-dasharray="753.9" stroke-dashoffset="0"/>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span id="timerDisplay" class="text-6xl font-light tracking-tighter">25:00</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button id="zenToggle" onclick="toggleZen()" class="px-10 py-4 bg-white text-black rounded-full font-bold text-sm hover:scale-105 transition active:scale-95">
+                            Initialize Zen
+                        </button>
+                        <button id="resetZen" onclick="resetTimer()" class="px-6 py-4 glass rounded-full font-bold text-sm hover:bg-white/10 transition">
+                            Reset
+                        </button>
+                    </div>
+
+                    <p id="zenTip" class="mt-12 text-[10px] text-white/20 uppercase tracking-widest max-w-xs leading-loose">
+                        Peripheral vision expansion recommended for deep focus.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- 1. TO-DO LOGIC ---
+        let todos = JSON.parse(localStorage.getItem('neural_todos') || '[]');
+        let tasksCompletedCount = parseInt(localStorage.getItem('tasks_nuked') || '0');
+
+        function renderTodos() {
+            const list = document.getElementById('todoList');
+            list.innerHTML = todos.map((t, i) => `
+                <li class="todo-item ${t.completed ? 'completed' : ''} flex items-center justify-between p-4 bg-white/5 rounded-2xl group transition">
+                    <div class="flex items-center gap-3 cursor-pointer" onclick="toggleTodo(${i})">
+                        <div class="w-4 h-4 border border-white/20 rounded ${t.completed ? 'bg-indigo-500 border-indigo-500' : ''} flex items-center justify-center text-[10px]">
+                            ${t.completed ? '✓' : ''}
+                        </div>
+                        <span class="text-sm font-medium text-white/70">${t.text}</span>
+                    </div>
+                    <button onclick="removeTodo(${i})" class="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition">✕</button>
+                </li>
+            `).join('');
+            document.getElementById('tasksNuked').innerText = tasksCompletedCount;
+        }
+
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            if (!input.value.trim()) return;
+            todos.push({ text: input.value, completed: false });
+            input.value = '';
+            saveAndRender();
+        }
+
+        function toggleTodo(i) {
+            todos[i].completed = !todos[i].completed;
+            if (todos[i].completed) {
+                tasksCompletedCount++;
+                localStorage.setItem('tasks_nuked', tasksCompletedCount);
+            }
+            saveAndRender();
+        }
+
+        function removeTodo(i) {
+            todos.splice(i, 1);
+            saveAndRender();
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('neural_todos', JSON.stringify(todos));
+            renderTodos();
+        }
+
+        // --- 2. ZEN MODE LOGIC ---
+        let timer;
+        let timeLeft = 25 * 60;
+        let isRunning = false;
+        let sessionsCount = parseInt(localStorage.getItem('zen_sessions') || '0');
+
+        function toggleZen() {
+            if (!isRunning) startTimer();
+            else stopTimer();
+        }
+
+        function startTimer() {
+            isRunning = true;
+            document.body.classList.add('zen-active');
+            document.getElementById('zenToggle').innerText = "End Session";
+            document.getElementById('zenStatus').innerText = "Flow State Active";
+            document.getElementById('zenGlow').style.opacity = "1";
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    sessionsCount++;
+                    localStorage.setItem('zen_sessions', sessionsCount);
+                    document.getElementById('sessionCount').innerText = sessionsCount;
+                    stopTimer();
+                    alert("Focus Cycle Complete. Returning to Terminal.");
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            isRunning = false;
+            clearInterval(timer);
+            document.body.classList.remove('zen-active');
+            document.getElementById('zenToggle').innerText = "Resume Flow";
+            document.getElementById('zenStatus').innerText = "System Ready";
+            document.getElementById('zenGlow').style.opacity = "0";
+        }
+
+        function resetTimer() {
+            stopTimer();
+            timeLeft = 25 * 60;
+            updateTimerDisplay();
+            document.getElementById('zenToggle').innerText = "Initialize Zen";
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timeLeft / 60);
+            const s = timeLeft % 60;
+            document.getElementById('timerDisplay').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+            
+            // Update Circle
+            const offset = 753.9 - (timeLeft / (25 * 60)) * 753.9;
+            document.getElementById('timerCircle').style.strokeDashoffset = offset;
+        }
+
+        // --- INIT ---
+        renderTodos();
+        document.getElementById('sessionCount').innerText = sessionsCount;
+        updateTimerDisplay();
+    </script>
+</body>
+</html>

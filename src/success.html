@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Complete | SkillTracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap");
+        body {
+            background: #050505;
+            color: white;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            overflow: hidden;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 40px;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 24px;
+        }
+        .animate-reveal {
+            animation: reveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes reveal {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-3xl w-full glass p-12 text-center animate-reveal">
+        <div class="mb-8 inline-flex items-center justify-center w-24 h-24 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+
+        <h1 class="text-4xl font-extrabold mb-2 tracking-tight">Certification Earned</h1>
+        <p class="text-white/40 mb-12 font-light italic" id="courseName">Vector Fundamentals Mastered</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+            <div class="stat-card">
+                <div class="text-[10px] uppercase tracking-widest text-white/30 mb-2 font-bold">Accuracy</div>
+                <div class="text-3xl font-black text-emerald-400" id="finalAccuracy">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-[10px] uppercase tracking-widest text-white/30 mb-2 font-bold">Time Spent</div>
+                <div class="text-3xl font-black text-white" id="finalTime">0m</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-[10px] uppercase tracking-widest text-white/30 mb-2 font-bold">Modules</div>
+                <div class="text-3xl font-black text-indigo-400" id="finalModules">0/0</div>
+            </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4 justify-center">
+            <button onclick="window.location.href='dashboard.html'" class="px-10 py-4 bg-white text-black font-extrabold rounded-2xl hover:bg-neutral-200 transition active:scale-95 shadow-xl">
+                Return to Dashboard
+            </button>
+            <button onclick="window.print()" class="px-10 py-4 bg-white/5 text-white/60 font-bold rounded-2xl border border-white/5 hover:bg-white/10 transition">
+                Print Transcript
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 1. Recover Data
+        const course = JSON.parse(localStorage.getItem("courseData"));
+        if (!course) window.location.href = "dashboard.html";
+
+        const topicUID = (course.topicName || "current_vector").replace(/\s+/g, "_");
+        const mastery = JSON.parse(localStorage.getItem(`mastery_${topicUID}`)) || {
+            totalCorrect: 0,
+            totalAttempted: 0,
+            completedQuizzes: 0
+        };
+
+        const learningTimeSeconds = parseInt(localStorage.getItem("learningTime")) || 0;
+
+        // 2. Calculate Stats
+        const accuracy = mastery.totalAttempted > 0 
+            ? Math.round((mastery.totalCorrect / mastery.totalAttempted) * 100) 
+            : 0;
+        
+        const minutes = Math.floor(learningTimeSeconds / 60);
+        const timeDisplay = minutes > 0 ? `${minutes}m` : `${learningTimeSeconds}s`;
+
+        const totalQuizzes = course.chapters.reduce((acc, ch) => {
+            return acc + ch.topics.filter(t => t.quiz && t.quiz.questions?.length > 0).length;
+        }, 0);
+
+        // 3. Update UI
+        document.getElementById("courseName").textContent = `${course.topicName} Certification`;
+        document.getElementById("finalAccuracy").textContent = `${accuracy}%`;
+        document.getElementById("finalTime").textContent = timeDisplay;
+        document.getElementById("finalModules").textContent = `${mastery.completedQuizzes}/${totalQuizzes}`;
+
+        // 4. Cleanup (Optional: uncomment if you want to reset the course after finishing)
+        // localStorage.removeItem(`progress_${topicUID}`);
+        // localStorage.removeItem("resumeIndices");
+    </script>
+</body>
+</html>

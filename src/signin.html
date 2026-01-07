@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillTracker | Authorization</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+            letter-spacing: -0.03em;
+        }
+
+        .squircle { border-radius: 38px; }
+        .input-squircle { border-radius: 20px; }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            color: white;
+        }
+
+        .input-field:focus {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.3);
+            outline: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-ui { animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col justify-between overflow-hidden">
+
+    <nav class="flex justify-between items-center px-10 py-8 relative z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-5 h-5 bg-white rounded-[5px]"></div>
+            <span class="font-bold text-sm tracking-tight">SkillTracker</span>
+        </div>
+        
+        <div class="flex items-center gap-6">
+            <span class="text-[11px] font-medium text-white/30 uppercase tracking-widest">Secure Access</span>
+            <a href="signup.html" class="text-xs font-semibold text-white/50 hover:text-white transition-colors">
+                Initialize Identity
+            </a>
+        </div>
+    </nav>
+
+    <main class="px-10 flex-1 flex flex-col justify-center items-center">
+        <div class="w-full max-w-[420px] animate-ui">
+            <div class="mb-10 text-center md:text-left">
+                <h1 class="text-5xl font-extrabold tracking-tighter leading-none mb-4">
+                    WELCOME <br> <span class="text-white/20 italic">BACK.</span>
+                </h1>
+                <p class="text-white/40 text-sm font-light">Verify your credentials to resume the session.</p>
+            </div>
+
+            <div class="glass squircle p-10">
+                <form id="signinForm" class="space-y-6">
+                    <div>
+                        <label class="block text-[10px] font-bold text-white/20 uppercase tracking-widest mb-2 px-1">Identity (Email)</label>
+                        <input type="email" required placeholder="name@domain.com" 
+                               class="input-field w-full px-5 py-4 input-squircle text-sm placeholder:text-white/10" />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-white/20 uppercase tracking-widest mb-2 px-1">Access Key</label>
+                        <input type="password" required placeholder="••••••••" 
+                               class="input-field w-full px-5 py-4 input-squircle text-sm placeholder:text-white/10" />
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-white text-black py-4 input-squircle font-black text-xs uppercase tracking-widest hover:bg-neutral-200 transition-all duration-300 mt-4">
+                        Establish Connection →
+                    </button>
+                </form>
+
+                <div class="mt-8 text-center">
+                    <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">
+                        New Operator? <a href="signup.html" class="text-white hover:underline transition ml-1">Initialize Here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="px-10 py-10 flex justify-between items-center animate-ui" style="animation-delay: 0.3s;">
+        <div class="flex gap-10">
+            <div class="space-y-1">
+                <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Protocol</p>
+                <p class="text-xs text-white/40">JWT Header Auth</p>
+            </div>
+            <div class="space-y-1">
+                <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Status</p>
+                <div class="flex items-center gap-2">
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                    <p class="text-xs text-white/40">Gateway Open</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="h-[1px] w-12 bg-white/10"></div>
+            <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Obsidian Edition</span>
+        </div>
+    </footer>
+
+    <div class="fixed -bottom-[20%] -right-[10%] w-[50%] h-[50%] bg-white/[0.02] rounded-full blur-[120px] pointer-events-none"></div>
+
+    <script type="module">
+        import auth from './js/auth.js';
+        const signinForm = document.getElementById('signinForm');
+
+        signinForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const email = signinForm.querySelectorAll('input')[0].value;
+            const password = signinForm.querySelectorAll('input')[1].value;
+
+            try {
+                const res = await fetch("http://localhost:5500/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+                if (res.status === 200) {
+                    auth.setSession(data);
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert(data.error || "Access Denied.");
+                }
+            } catch (err) {
+                console.error("Login Error:", err);
+            }
+        };
+    </script>
+</body>
+</html>
