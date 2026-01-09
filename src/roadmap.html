@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Learning Architect | Roadmap Generator</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        background: #ffffff;
+        color: #111;
+      }
+
+      .widget {
+        background: #f9f9f9;
+        border: 1px solid #eee;
+        border-radius: 28px;
+      }
+
+      .label-caps {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #9ca3af;
+      }
+    </style>
+  </head>
+
+  <body class="p-6 md:p-12">
+    <div class="max-w-6xl mx-auto space-y-8">
+      <header class="flex justify-between items-end">
+        <div>
+          <span class="label-caps">AI SYSTEM</span>
+          <h1 class="text-5xl font-black tracking-tighter">
+            Roadmap Architect
+          </h1>
+        </div>
+      </header>
+
+      <div class="widget p-8 md:p-12 space-y-10">
+        <!-- STEP 1 -->
+        <div id="step-1" class="space-y-6">
+          <span class="label-caps">Stage 01</span>
+          <h2 class="text-3xl font-bold">What do you want to master?</h2>
+
+          <div class="flex gap-4">
+            <input
+              id="userInput"
+              type="text"
+              placeholder="e.g. I want to become a Flutter Developer in 6 months"
+              class="flex-1 px-6 py-4 rounded-xl border outline-none focus:ring-2 ring-black"
+            />
+            <button
+              onclick="getQuestions()"
+              class="bg-black text-white px-8 py-4 rounded-xl font-bold"
+            >
+              Initialize
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div id="step-2" class="hidden space-y-8">
+          <div>
+            <span class="label-caps">Stage 02</span>
+            <h2 class="text-3xl font-bold">Fine-tuning</h2>
+          </div>
+
+          <div
+            id="questions-area"
+            class="grid grid-cols-1 md:grid-cols-2 gap-8"
+          ></div>
+
+          <button
+            onclick="generateFinalRoadmap()"
+            class="bg-black text-white px-12 py-4 rounded-xl font-black"
+          >
+            Generate Roadmap
+          </button>
+        </div>
+
+        <!-- STEP 3 -->
+        <div id="step-3" class="hidden space-y-10">
+          <div>
+            <span id="roadmap-lang" class="label-caps"></span>
+            <h2
+              id="roadmap-title"
+              class="text-4xl font-black tracking-tighter"
+            ></h2>
+          </div>
+
+          <div id="roadmap-content" class="space-y-12"></div>
+
+          <button
+            onclick="location.reload()"
+            class="text-sm font-bold underline"
+          >
+            Start Over
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOADER -->
+    <div
+      id="loader"
+      class="hidden fixed inset-0 bg-white/90 flex items-center justify-center z-50"
+    >
+      <div
+        class="w-14 h-14 border-4 border-gray-200 border-t-black rounded-full animate-spin"
+      ></div>
+    </div>
+
+    <script type="module">
+      import auth from "./js/auth.js";
+      window.getQuestions = getQuestions;
+      window.generateFinalRoadmap = generateFinalRoadmap;
+      window.setAnswer = setAnswer;
+
+      let selectedAnswers = {};
+      let initialMessage = "";
+
+      function showLoader(show) {
+        document.getElementById("loader").classList.toggle("hidden", !show);
+      }
+
+      // STEP 1 — GET QUESTIONS
+      async function getQuestions() {
+        const msg = document.getElementById("userInput").value.trim();
+        if (!msg) return;
+
+        initialMessage = msg;
+        showLoader(true);
+
+        try {
+          const res = await auth.authFetch(
+            "http://localhost:5500/roadmap/getQuestions",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ message: msg }),
+            }
+          );
+
+          const data = await res.json();
+          renderQuestions(data.questions);
+
+          document.getElementById("step-1").classList.add("hidden");
+          document.getElementById("step-2").classList.remove("hidden");
+        } catch (e) {
+          console.error(e);
+          alert("Failed to fetch questions");
+        } finally {
+          showLoader(false);
+        }
+      }
+
+      function renderQuestions(questions) {
+        const area = document.getElementById("questions-area");
+        area.innerHTML = "";
+
+        questions.forEach((q) => {
+          const card = document.createElement("div");
+          card.className = "space-y-4";
+
+          card.innerHTML = `
+            <span class="label-caps">${q.key.replace("_", " ")}</span>
+            <p class="font-bold">${q.question}</p>
+            <div class="flex flex-wrap gap-2">
+              ${q.options
+                .map(
+                  (opt) => `
+                <button
+                  class="btn-${q.key} px-4 py-2 rounded-lg border text-sm font-semibold"
+                  onclick="setAnswer(this,'${q.key}','${opt}')"
+                >
+                  ${opt}
+                </button>
+              `
+                )
+                .join("")}
+            </div>
+          `;
+
+          area.appendChild(card);
+        });
+      }
+
+      // FIXED: event handling + "Other"
+      function setAnswer(el, key, val) {
+        document.querySelectorAll(`.btn-${key}`).forEach((b) => {
+          b.classList.remove("bg-black", "text-white", "border-black");
+        });
+
+        el.classList.add("bg-black", "text-white", "border-black");
+
+        if (val === "Other") {
+          const custom = prompt("Please specify:");
+          if (custom) selectedAnswers[key] = custom;
+        } else {
+          selectedAnswers[key] = val;
+        }
+      }
+
+      // STEP 3 — GENERATE ROADMAP
+      async function generateFinalRoadmap() {
+        showLoader(true);
+
+        try {
+          const res = await auth.authFetch(
+            "http://localhost:5500/roadmap/getRoadmap",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                skill: "Software Development",
+                duration_months: 6,
+                answers: selectedAnswers,
+              }),
+            }
+          );
+
+          const data = await res.json();
+          renderFinalRoadmap(data);
+
+          document.getElementById("step-2").classList.add("hidden");
+          document.getElementById("step-3").classList.remove("hidden");
+        } catch (e) {
+          console.error(e);
+          alert("Failed to generate roadmap");
+        } finally {
+          showLoader(false);
+        }
+      }
+
+      function renderFinalRoadmap(data) {
+        document.getElementById("roadmap-title").innerText =
+          data.target_role || data.skill;
+
+        document.getElementById("roadmap-lang").innerText =
+          data.primary_language || "Curriculum";
+
+        const content = document.getElementById("roadmap-content");
+        content.innerHTML = data.roadmap
+          .map(
+            (month) => `
+          <div class="space-y-6">
+            <h3 class="text-2xl font-black">
+              Month ${month.month}: ${month.theme}
+            </h3>
+            <div class="grid md:grid-cols-4 gap-4">
+              ${month.weeks
+                .map(
+                  (week) => `
+                <div class="p-4 bg-gray-50 rounded-xl border">
+                  <span class="label-caps">Week ${week.week}</span>
+                  <p class="font-bold mt-2">${week.focus}</p>
+                  <ul class="text-xs text-gray-500 mt-2 space-y-1">
+                    ${week.tasks.map((t) => `<li>• ${t}</li>`).join("")}
+                  </ul>
+                  <p class="text-xs mt-3 font-semibold">
+                    ${week.outcome}
+                  </p>
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+          </div>
+        `
+          )
+          .join("");
+      }
+    </script>
+  </body>
+</html>
