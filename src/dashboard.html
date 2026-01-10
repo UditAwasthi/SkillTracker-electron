@@ -304,8 +304,10 @@
           return;
         }
 
-        const {name} = JSON.parse(localStorage.getItem("user")) || {name: "OPERATOR"};
-        
+        const { name } = JSON.parse(localStorage.getItem("user")) || {
+          name: "OPERATOR",
+        };
+
         document.getElementById(
           "welcomeMsg"
         ).innerText = `ID: ${name.toUpperCase()}`;
@@ -428,14 +430,40 @@
         const courseProgress = await fetchCourseProgress(course.data._id);
         const chaptersCount = course.data?.chapters?.length || 0;
 
-       
         const numberOfChaptersCompleted = Object.values(
           courseProgress?.topicProgress || {}
         ).reduce((sum, t) => sum + (t.completed ? 1 : 0), 0);
-      
-       
 
-        return Math.min(Math.round((numberOfChaptersCompleted/ chaptersCount) * 100), 100);
+        const progress = Math.min(
+          Math.round((numberOfChaptersCompleted / chaptersCount) * 100),
+          100
+        );
+      if (progress === 100 && !courseProgress.completed) {
+        await auth.authFetch("http://localhost:5500/course/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ courseId: course.data._id }),
+        });
+      }
+        return progress;
+        }
+      // }
+      async function calculateProgress_Quiz(course) {
+        const courseProgress = await fetchCourseProgress(course.data._id);
+        if (!courseProgress) return 0;
+
+        const allTopics =
+          course.data?.chapters?.flatMap((ch) => ch.topics) || [];
+
+        if (!allTopics.length) return 0;
+
+        const passedTopics = Object.values(
+          courseProgress.topicProgress || {}
+        ).filter((t) => t.quizPassed === true).length;
+
+        const progress = Math.round((passedTopics / allTopics.length) * 100);
+
+        return Math.min(progress, 100);
       }
 
       /* ===============================
@@ -574,20 +602,3 @@
     </script>
   </body>
 </html>
-
-
-
-<!-- 
-Some use full code snippets were ignored to focus on the relevant changes.
-  update calculateProgress function:
- // const allTopics =
-        //   course.data?.chapters?.flatMap((ch) => ch.topics) || [];
-        // if (!allTopics.length) return 0;
-        // const topicsCount = allTopics.length;
-        // const correctCount = Object.values(
-        //   courseProgress?.topicProgress || {}
-        // ).reduce((sum, t) => sum + (t.correctCount || 0), 0);
-        // const numberOfQuizCompleted = Object.values(
-        //   courseProgress?.topicProgress || {}
-        // ).reduce((sum, t) => sum + (t.quizPassed ? 1 : 0), 0);
--->

@@ -182,271 +182,295 @@
         </button>
       </footer>
     </main>
+  </body>
+  <script type="module">
+    import auth from "./js/auth.js";
 
-   <script type="module">
-  import auth from "./js/auth.js";
+    /* ================================
+   BOOTSTRAP
+================================ */
+    const course = JSON.parse(localStorage.getItem("courseData"));
+    if (!course) location.href = "dashboard.html";
 
-  /* ================================
-     BOOTSTRAP
-  ================================ */
-  const course = JSON.parse(localStorage.getItem("courseData"));
-  if (!course) location.href = "dashboard.html";
+    const courseId = course._id;
 
-  const courseId = course._id;
+    /* ================================
+   GLOBAL STATE
+================================ */
+    let progressData = null;
+    let currentChapterIdx = 0;
+    let currentTopicIdx = 0;
 
-  /* ================================
-     GLOBAL STATE
-  ================================ */
-  let progressData = null;
-  let currentChapterIdx = 0;
-  let currentTopicIdx = 0;
-
-  /* ================================
-     PROGRESS FETCH (SINGLE SOURCE)
-  ================================ */
-  async function fetchCourseProgress(courseId) {
-    try {
-      const res = await fetch(
-        `http://localhost:5500/progress/${courseId}`,
-        { headers: auth.getHeaders() }
-      );
-      if (!res.ok) return null;
-      return await res.json();
-    } catch {
-      return null;
-    }
-  }
-
-  /* ================================
-     HELPERS (BACKEND STATE)
-  ================================ */
-  function isCourseCompleted() {
-    return progressData?.completed === true;
-  }
-
-  function getTopicProgress(cIdx, tIdx) {
-    return progressData?.topicProgress?.[`${cIdx}:${tIdx}`];
-  }
-
-  function isTopicCompleted(cIdx, tIdx) {
-    return getTopicProgress(cIdx, tIdx)?.completed === true;
-  }
-
-  function buildChapterQuiz(chapter) {
-    const questions = [];
-    chapter.topics.forEach((t) => {
-      if (t.quiz?.questions) questions.push(...t.quiz.questions);
-    });
-    return questions.length ? { questions } : null;
-  }
-
-  /* ================================
-     METRICS (PROGRESS + ACCURACY)
-  ================================ */
-  function updateMasteryDisplay() {
-    if (!progressData || !progressData.topicProgress) return;
-
-    const topicProgressArray = Object.values(progressData.topicProgress);
-
-    const correctCount = topicProgressArray.reduce(
-      (sum, t) => sum + (t.correctCount || 0),
-      0
-    );
-
-    const attempted = topicProgressArray.reduce(
-      (sum, t) => sum + (t.attemptedCount || 0),
-      0
-    );
-
-    // ✅ Topic = completed if at least one question attempted
-    const completedTopics = topicProgressArray.filter(
-      (t) => (t.attemptedCount || 0) > 0
-    ).length;
-
-    const allTopics =
-      course.chapters?.flatMap((ch) => ch.topics) || [];
-
-    const progressPercent = allTopics.length
-      ? Math.round((completedTopics / allTopics.length) * 100)
-      : 0;
-
-    const accuracyPercent =
-      attempted > 0 ? Math.round((correctCount / attempted) * 100) : 0;
-
-    document.getElementById("progressBar").style.width = `${progressPercent}%`;
-    document.getElementById("progressText").textContent = `${progressPercent}%`;
-    document.getElementById("accuracyText").textContent = `${accuracyPercent}%`;
-  }
-
-  /* ================================
-     SIDEBAR
-  ================================ */
-  function renderSidebar() {
-    document.getElementById("chapterList").innerHTML = course.chapters
-      .map(
-        (ch, cIdx) => `
-        <div class="mb-6">
-          <div class="flex justify-between px-4 mb-2">
-            <span class="text-[8px] uppercase text-white/30">
-              ${ch.chapterTitle}
-            </span>
-          </div>
-          ${ch.topics
-            .map(
-              (t, tIdx) => `
-            <button onclick="goToTopic(${cIdx},${tIdx})"
-              class="w-full px-4 py-3 text-left text-[11px]
-              ${
-                isTopicCompleted(cIdx, tIdx)
-                  ? "text-emerald-400"
-                  : "text-white/30"
-              }
-              ${
-                cIdx === currentChapterIdx && tIdx === currentTopicIdx
-                  ? "font-bold text-white"
-                  : "hover:text-white/60"
-              }">
-              ${t.title}
-            </button>
-          `
-            )
-            .join("")}
-        </div>
-      `
-      )
-      .join("");
-  }
-
-  /* ================================
-     CONTENT
-  ================================ */
-  function renderContent() {
-    const chapter = course.chapters[currentChapterIdx];
-    const topic = chapter.topics[currentTopicIdx];
-
-    document.getElementById("currentChapterName").textContent =
-      chapter.chapterTitle;
-
-    document.querySelector("#content .max-w-3xl").innerHTML = `
-      <h1 class="text-5xl font-black italic uppercase mb-6">${topic.title}</h1>
-      <p class="text-white/40 mb-10">${topic.content.description}</p>
-      ${topic.content.sections
-        .map((sec) =>
-          sec.type === "text"
-            ? `<p class="text-white/70 mb-4">${sec.value}</p>`
-            : `<pre><code>${sec.code}</code></pre>`
-        )
-        .join("")}
-    `;
-
-    const nextBtn = document.getElementById("nextBtn");
-
-    const isLastChapter = currentChapterIdx === course.chapters.length - 1;
-    const isLastTopic = currentTopicIdx === chapter.topics.length - 1;
-    const topicDone = isTopicCompleted(currentChapterIdx, currentTopicIdx);
-    const chapterQuiz = buildChapterQuiz(chapter);
-
-    if (isCourseCompleted()) {
-      nextBtn.textContent = "Achieve Mastery →";
-      nextBtn.className =
-        "px-10 py-4 bg-emerald-500 text-black rounded-full font-black uppercase";
-    } else if (isLastTopic && chapterQuiz && !topicDone) {
-      nextBtn.textContent = "Begin Chapter Validation →";
-    } else {
-      nextBtn.textContent = "Complete & Continue →";
-    }
-
-    renderSidebar();
-    updateMasteryDisplay();
-    document.getElementById("content").scrollTop = 0;
-  }
-
-  /* ================================
-     NAVIGATION
-  ================================ */
-  window.goToTopic = (c, t) => {
-    currentChapterIdx = c;
-    currentTopicIdx = t;
-    renderContent();
-  };
-
-  document.getElementById("nextBtn").onclick = async () => {
-    const chapter = course.chapters[currentChapterIdx];
-    const isLastChapter = currentChapterIdx === course.chapters.length - 1;
-    const isLastTopic = currentTopicIdx === chapter.topics.length - 1;
-
-    if (isCourseCompleted()) {
-      location.href = "success.html";
-      return;
-    }
-
-    if (isLastTopic && !isTopicCompleted(currentChapterIdx, currentTopicIdx)) {
-      const quiz = buildChapterQuiz(chapter);
-      if (quiz) {
-        localStorage.setItem("activeQuiz", JSON.stringify(quiz));
-        localStorage.setItem(
-          "quizReturnPath",
-          JSON.stringify({
-            chapterIndex: currentChapterIdx,
-            topicIndex: currentTopicIdx,
-            chapterTitle: chapter.chapterTitle,
-          })
-        );
-        location.href = "quiz.html";
-        return;
+    /* ================================
+   API HELPERS
+================================ */
+    async function fetchCourseProgress(courseId) {
+      try {
+        const res = await fetch(`http://localhost:5500/progress/${courseId}`, {
+          headers: auth.getHeaders(),
+        });
+        if (!res.ok) return null;
+        return await res.json();
+      } catch {
+        return null;
       }
     }
 
-    await auth.authFetch("http://localhost:5500/progress/update", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        courseId,
-        chapterIndex: currentChapterIdx,
-        topicIndex: currentTopicIdx,
-      }),
-    });
+    async function checkAndCompleteCourse(courseId) {
+      try {
+        const res = await auth.authFetch(
+          "http://localhost:5500/course/complete",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ courseId }),
+          }
+        );
+        if (!res.ok) return null;
+        return await res.json();
+      } catch {
+        return null;
+      }
+    }
 
-    // 🔄 Refresh authoritative progress
+    /* ================================
+   BACKEND-TRUTH HELPERS
+================================ */
+    function isCourseCompleted() {
+      return progressData?.completed === true;
+    }
+
+    function getTopicProgress(cIdx, tIdx) {
+      return progressData?.topicProgress?.[`${cIdx}:${tIdx}`];
+    }
+
+    function isTopicCompleted(cIdx, tIdx) {
+      return getTopicProgress(cIdx, tIdx)?.quizPassed === true;
+    }
+
+    function buildChapterQuiz(chapter) {
+      const questions = [];
+      chapter.topics.forEach((t) => {
+        if (t.quiz?.questions) questions.push(...t.quiz.questions);
+      });
+      return questions.length ? { questions } : null;
+    }
+
+    /* ================================
+   COMPLETION POLICY (CRITICAL)
+================================ */
+    async function tryCompleteCourseIfEligible() {
+      if (!progressData || progressData.completed) return;
+
+      const allTopics = course.chapters.flatMap((ch) => ch.topics);
+      const passedCount = Object.values(
+        progressData.topicProgress || {}
+      ).filter((t) => t.quizPassed === true).length;
+
+      if (allTopics.length && passedCount === allTopics.length) {
+        const res = await checkAndCompleteCourse(courseId);
+        if (res?.completed) {
+          progressData = res;
+        }
+      }
+    }
+
+    /* ================================
+   METRICS (UI === BACKEND)
+================================ */
+    function updateMasteryDisplay() {
+      if (!progressData || !progressData.topicProgress) return;
+
+      const topics = Object.values(progressData.topicProgress);
+
+      const correct = topics.reduce((s, t) => s + (t.correctCount || 0), 0);
+      const attempted = topics.reduce((s, t) => s + (t.attemptedCount || 0), 0);
+      const completed = topics.filter((t) => t.quizPassed === true).length;
+
+      const totalTopics = course.chapters.flatMap((ch) => ch.topics).length;
+
+      const progressPercent = totalTopics
+        ? Math.round((completed / totalTopics) * 100)
+        : 0;
+
+      const accuracyPercent = attempted
+        ? Math.round((correct / attempted) * 100)
+        : 0;
+
+      document.getElementById(
+        "progressBar"
+      ).style.width = `${progressPercent}%`;
+      document.getElementById(
+        "progressText"
+      ).textContent = `${progressPercent}%`;
+      document.getElementById(
+        "accuracyText"
+      ).textContent = `${accuracyPercent}%`;
+    }
+
+    /* ================================
+   SIDEBAR
+================================ */
+    function renderSidebar() {
+      document.getElementById("chapterList").innerHTML = course.chapters
+        .map(
+          (ch, cIdx) => `
+      <div class="mb-6">
+        <div class="px-4 mb-2 text-[8px] uppercase text-white/30">
+          ${ch.chapterTitle}
+        </div>
+        ${ch.topics
+          .map(
+            (t, tIdx) => `
+          <button onclick="goToTopic(${cIdx},${tIdx})"
+            class="w-full px-4 py-3 text-left text-[11px]
+            ${
+              isTopicCompleted(cIdx, tIdx)
+                ? "text-emerald-400"
+                : "text-white/30"
+            }
+            ${
+              cIdx === currentChapterIdx && tIdx === currentTopicIdx
+                ? "font-bold text-white"
+                : "hover:text-white/60"
+            }">
+            ${t.title}
+          </button>
+        `
+          )
+          .join("")}
+      </div>
+    `
+        )
+        .join("");
+    }
+
+    /* ================================
+   CONTENT
+================================ */
+    function renderContent() {
+      const chapter = course.chapters[currentChapterIdx];
+      const topic = chapter.topics[currentTopicIdx];
+
+      document.getElementById("currentChapterName").textContent =
+        chapter.chapterTitle;
+
+      document.querySelector("#content .max-w-3xl").innerHTML = `
+    <h1 class="text-5xl font-black italic uppercase mb-6">${topic.title}</h1>
+    <p class="text-white/40 mb-10">${topic.content.description}</p>
+    ${topic.content.sections
+      .map((sec) =>
+        sec.type === "text"
+          ? `<p class="text-white/70 mb-4">${sec.value}</p>`
+          : `<pre><code>${sec.code}</code></pre>`
+      )
+      .join("")}
+  `;
+
+      const nextBtn = document.getElementById("nextBtn");
+      const isLastTopic = currentTopicIdx === chapter.topics.length - 1;
+      const chapterQuiz = buildChapterQuiz(chapter);
+
+      if (isCourseCompleted()) {
+        nextBtn.textContent = "Achieve Mastery →";
+        nextBtn.className =
+          "px-10 py-4 bg-emerald-500 text-black rounded-full font-black uppercase";
+      } else if (
+        isLastTopic &&
+        chapterQuiz &&
+        !isTopicCompleted(currentChapterIdx, currentTopicIdx)
+      ) {
+        nextBtn.textContent = "Begin Chapter Validation →";
+      } else {
+        nextBtn.textContent = "Complete & Continue →";
+      }
+
+      renderSidebar();
+      updateMasteryDisplay();
+      document.getElementById("content").scrollTop = 0;
+    }
+
+    /* ================================
+   NAVIGATION
+================================ */
+    window.goToTopic = (c, t) => {
+      currentChapterIdx = c;
+      currentTopicIdx = t;
+      renderContent();
+    };
+
+    document.getElementById("nextBtn").onclick = async () => {
+      const chapter = course.chapters[currentChapterIdx];
+      const isLastTopic = currentTopicIdx === chapter.topics.length - 1;
+
+      if (isCourseCompleted()) {
+        location.href = "success.html";
+        return;
+      }
+
+      if (
+        isLastTopic &&
+        !isTopicCompleted(currentChapterIdx, currentTopicIdx)
+      ) {
+        const quiz = buildChapterQuiz(chapter);
+        if (quiz) {
+          localStorage.setItem("activeQuiz", JSON.stringify(quiz));
+          localStorage.setItem(
+            "quizReturnPath",
+            JSON.stringify({
+              chapterIndex: currentChapterIdx,
+              topicIndex: currentTopicIdx,
+              chapterTitle: chapter.chapterTitle,
+            })
+          );
+          location.href = "quiz.html";
+          return;
+        }
+      }
+
+      await auth.authFetch("http://localhost:5500/progress/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          courseId,
+          chapterIndex: currentChapterIdx,
+          topicIndex: currentTopicIdx,
+        }),
+      });
+
+      progressData = await fetchCourseProgress(courseId);
+      await tryCompleteCourseIfEligible();
+
+      if (currentTopicIdx < chapter.topics.length - 1) {
+        currentTopicIdx++;
+      } else if (currentChapterIdx < course.chapters.length - 1) {
+        currentChapterIdx++;
+        currentTopicIdx = 0;
+      }
+
+      renderContent();
+    };
+
+    document.getElementById("prevBtn").onclick = () => {
+      if (currentTopicIdx > 0) {
+        currentTopicIdx--;
+      } else if (currentChapterIdx > 0) {
+        currentChapterIdx--;
+        currentTopicIdx = course.chapters[currentChapterIdx].topics.length - 1;
+      }
+      renderContent();
+    };
+
+    /* ================================
+   INIT
+================================ */
     progressData = await fetchCourseProgress(courseId);
-
-    if (currentTopicIdx < chapter.topics.length - 1) {
-      currentTopicIdx++;
-    } else if (!isLastChapter) {
-      currentChapterIdx++;
-      currentTopicIdx = 0;
+    if (progressData?.progress) {
+      currentChapterIdx = progressData.progress.chapterIndex ?? 0;
+      currentTopicIdx = progressData.progress.topicIndex ?? 0;
     }
 
+    await tryCompleteCourseIfEligible();
     renderContent();
-  };
-
-  document.getElementById("prevBtn").onclick = () => {
-    if (currentTopicIdx > 0) {
-      currentTopicIdx--;
-    } else if (currentChapterIdx > 0) {
-      currentChapterIdx--;
-      currentTopicIdx =
-        course.chapters[currentChapterIdx].topics.length - 1;
-    }
-    renderContent();
-  };
-
-  /* ================================
-     INIT
-  ================================ */
-  progressData = await fetchCourseProgress(courseId);
-  if (!progressData) {
-    console.error("Failed to load progress");
-  }
-
-  // Resume from backend progress
-  if (progressData.progress) {
-    currentChapterIdx = progressData.progress.chapterIndex ?? 0;
-    currentTopicIdx = progressData.progress.topicIndex ?? 0;
-  }
-
-  renderContent();
-</script>
-
-  </body>
+  </script>
 </html>
