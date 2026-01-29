@@ -1,116 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Temporal Engine | Linear Stream</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillTracker | Chromatic Stream</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap");
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@500&display=swap');
+        
         body {
-            font-family: "Plus Jakarta Sans", sans-serif;
-            background-color: #050505;
-            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+            letter-spacing: -0.03em;
             margin: 0;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
+        .squircle { border-radius: 38px; }
+        
         .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px) saturate(160%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        /* Custom Scrollbar for the timeline */
-        .timeline-container::-webkit-scrollbar {
-            height: 6px;
-        }
-        .timeline-container::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .timeline-container::-webkit-scrollbar-thumb {
-            background: #ff5733;
-            border-radius: 10px;
+        #scroll-wrapper {
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            z-index: 10;
+            will-change: transform;
         }
 
+        /* Chromatic Card Styling */
         .video-card {
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
         }
         
         .video-card:hover {
-            transform: translateY(-10px);
-            border-color: rgba(255, 87, 51, 0.4);
-            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-25px) scale(1.02);
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--phase-color);
+            box-shadow: 0 20px 80px -20px var(--phase-glow);
         }
 
-        .day-divider {
+        .video-card img {
+            transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .video-card:hover img {
+            transform: scale(1.1);
+        }
+
+        /* Day Label Accents */
+        .day-badge {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--phase-glow);
+            color: var(--phase-color);
+            border: 1px solid var(--phase-color);
+        }
+
+        /* Progress Line */
+        #progress-rail {
+            position: fixed;
+            bottom: 40px;
+            left: 10%;
+            width: 80%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: 100;
+        }
+        #progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #fff, var(--current-color, #fff));
+            box-shadow: 0 0 20px var(--current-color, transparent);
+            transition: background 0.5s ease;
+        }
+
+        .phase-divider {
             writing-mode: vertical-lr;
             transform: rotate(180deg);
+            color: var(--phase-color);
+            opacity: 0.3;
+        }
+
+        .key-hint {
+            transition: all 0.2s ease;
+        }
+        .key-active {
+            color: var(--current-color, #fff) !important;
+            transform: scale(1.1);
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="antialiased">
 
-    <header class="p-8 flex flex-col md:flex-row justify-between items-start gap-6 z-20">
-        <div>
-            <p class="text-[10px] font-black uppercase tracking-[0.3em] text-orange-500 mb-1">Architecture v3.0</p>
-            <h1 class="text-4xl font-black tracking-tighter italic">TEMPORAL ENGINE</h1>
+    <nav class="fixed top-0 left-0 w-full flex justify-between items-center px-10 py-10 z-50 pointer-events-none">
+        <div class="flex items-center gap-3 pointer-events-auto">
+            <div class="w-5 h-5 bg-white rounded-[6px]"></div>
+            <span class="font-bold text-base tracking-tighter">SkillTracker</span>
         </div>
-
-        <form id="form" class="glass p-2 rounded-3xl flex gap-2 w-full md:w-auto">
-            <input id="input-url" placeholder="Playlist URL" class="bg-transparent px-6 py-3 rounded-2xl outline-none text-sm font-semibold flex-grow md:min-w-[350px] text-white" required />
-            <input id="input-minutes" type="number" placeholder="Min/Day" class="bg-white/5 px-4 py-3 rounded-2xl outline-none text-sm font-bold w-24 text-white" required />
-            <button class="bg-white text-black px-8 py-3 rounded-2xl text-xs font-black uppercase hover:bg-orange-500 hover:text-white transition-all active:scale-95">Generate</button>
+        
+        <form id="form" class="glass px-2 py-2 squircle flex gap-2 pointer-events-auto shadow-2xl">
+            <input id="input-url" placeholder="Paste YouTube Playlist" class="bg-transparent px-6 py-2 outline-none text-xs font-medium w-72 text-white/40 focus:text-white" required />
+            <input id="input-minutes" type="number" placeholder="Mins" class="bg-white/5 px-3 py-2 rounded-2xl outline-none text-[10px] font-bold w-20 text-center" required />
+            <button class="bg-white text-black px-8 py-2 squircle text-[10px] font-black uppercase tracking-widest hover:bg-transparent hover:text-white border border-transparent hover:border-white transition-all">Sync</button>
         </form>
-    </header>
+    </nav>
 
-    <main id="timeline" class="timeline-container flex flex-nowrap items-center gap-8 overflow-x-auto px-10 pb-20 pt-10 flex-grow">
-        <div id="empty-state" class="w-full text-center opacity-20 py-20">
-            <p class="text-2xl font-light">Paste a playlist to initialize the stream...</p>
+    <div id="scroll-wrapper" class="px-24 gap-20">
+        <div id="empty-state" class="w-screen flex flex-col justify-center">
+            <h1 class="text-[12vw] font-black tracking-tighter leading-none opacity-[0.03] select-none">CHROMATIC<br>ENGINE.</h1>
         </div>
-    </main>
+    </div>
+
+    <div id="progress-rail"><div id="progress-fill"></div></div>
+    
+    <footer class="fixed bottom-0 left-0 w-full px-10 py-12 flex justify-between items-end z-50 pointer-events-none">
+        <div class="flex gap-8">
+            <div class="space-y-1">
+                <p class="text-[10px] font-bold text-white/20 uppercase tracking-[0.4em]">Current Phase</p>
+                <p id="active-phase" class="text-sm font-bold transition-colors duration-500">Node 01</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-6 opacity-30 pointer-events-auto">
+            <div id="key-left" class="key-hint text-[10px] font-bold border border-white/20 px-2 py-1 rounded-md">←</div>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Navigate</span>
+            <div id="key-right" class="key-hint text-[10px] font-bold border border-white/20 px-2 py-1 rounded-md">→</div>
+        </div>
+
+        <div class="flex items-center gap-4 opacity-30">
+            <span class="text-[9px] font-bold uppercase tracking-widest">Obsidian Chromatic v2.2</span>
+        </div>
+    </footer>
 
     <script type="module">
         import auth from "./js/auth.js";
 
-        const API = "http://localhost:5500/youtube/playlist";
-        const timeline = document.getElementById('timeline');
+        const wrapper = document.getElementById('scroll-wrapper');
+        const progressFill = document.getElementById('progress-fill');
+        const phaseIndicator = document.getElementById('active-phase');
+        const keyL = document.getElementById('key-left');
+        const keyR = document.getElementById('key-right');
+        
+        let targetX = 0, currentX = 0, maxScroll = 0;
+        const ease = 0.08;
+        const scrollStep = 500; // Pixels per arrow click
 
-        function parseDuration(iso) {
-            const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-            const h = match[1] ? match[1].padStart(2, '0') + ':' : '';
-            const m = (match[2] || '0').padStart(2, '0');
-            const s = (match[3] || '0').padStart(2, '0');
-            return `${h}${m}:${s}`;
+        const colors = ['#FF5F6D', '#FFC371', '#00F2FF', '#70FF00', '#BF5AF2', '#FF375F'];
+
+        // 1. Mouse Wheel Scroll
+        window.addEventListener('wheel', (e) => {
+            targetX -= (e.deltaY + e.deltaX) * 0.9;
+            clampScroll();
+        });
+
+        // 2. Keyboard Arrow Scroll
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                targetX -= scrollStep;
+                keyR.classList.add('key-active');
+                setTimeout(() => keyR.classList.remove('key-active'), 150);
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                targetX += scrollStep;
+                keyL.classList.add('key-active');
+                setTimeout(() => keyL.classList.remove('key-active'), 150);
+            }
+            clampScroll();
+        });
+
+        function clampScroll() {
+            maxScroll = -(wrapper.offsetWidth - window.innerWidth + 300);
+            targetX = Math.min(0, Math.max(targetX, maxScroll || 0));
         }
 
-        function createVideoWidget(video, dayIndex) {
-            const duration = parseDuration(video.duration);
-            
+        function animate() {
+            currentX += (targetX - currentX) * ease;
+            wrapper.style.transform = `translate3d(${currentX}px, 0, 0)`;
+
+            if (maxScroll !== 0) {
+                const progress = (currentX / maxScroll) * 100;
+                progressFill.style.width = `${progress}%`;
+                
+                const cards = document.querySelectorAll('.video-card');
+                const idx = Math.min(cards.length - 1, Math.max(0, Math.floor(Math.abs(currentX) / 550)));
+                if(cards[idx]) {
+                    const c = cards[idx].style.getPropertyValue('--phase-color');
+                    phaseIndicator.style.color = c;
+                    phaseIndicator.innerText = `Node 0${cards[idx].dataset.day}`;
+                    document.documentElement.style.setProperty('--current-color', c);
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        function createCard(video, day) {
+            const color = colors[(day - 1) % colors.length];
             return `
-                <div class="video-card glass p-5 rounded-[32px] w-[380px] shrink-0 border border-white/10 group">
-                    <div class="w-full aspect-video rounded-2xl bg-cover bg-center mb-4 ring-1 ring-white/10 shadow-inner overflow-hidden relative">
-                        <img src="${video.thumbnails}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <div class="video-card glass p-8 squircle w-[480px] shrink-0" 
+                     data-day="${day}" 
+                     style="--phase-color: ${color}; --phase-glow: ${color}22">
+                    
+                    <div class="flex justify-between items-center mb-8">
+                        <span class="day-badge px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider">Day ${day}</span>
+                        <span class="text-[9px] font-mono text-white/20">SEQ_${video.videoId.slice(0,5)}</span>
                     </div>
                     
-                    <div class="space-y-3 px-1">
-                        <div class="flex justify-between items-center">
-                            <span class="bg-orange-500/20 text-orange-500 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-tighter">Day ${dayIndex}</span>
-                            <span class="text-white/40 text-[10px] font-bold font-mono">${duration}</span>
-                        </div>
-
-                        <div>
-                            <h2 class="text-lg font-bold text-white leading-tight line-clamp-2 min-h-[3.5rem]">${video.title}</h2>
-                            <p class="text-white/40 text-[11px] font-medium mt-1 uppercase tracking-widest">${video.channel}</p>
-                        </div>
-
-                        <div class="pt-2">
-                            <button onclick="window.open('https://youtube.com/watch?v=${video.videoId}')" class="w-full bg-white text-black py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-500 hover:text-white transition-colors duration-300 active:scale-95">
-                                Start Sequence
-                            </button>
-                        </div>
+                    <div class="w-full aspect-video squircle overflow-hidden mb-8 ring-1 ring-white/10 shadow-2xl">
+                        <img src="${video.thumbnails}" class="w-full h-full object-cover">
                     </div>
+
+                    <h2 class="text-2xl font-bold leading-tight tracking-tighter mb-10 h-16 line-clamp-2">${video.title}</h2>
+                    
+                    <button onclick="window.open('https://youtube.com/watch?v=${video.videoId}')" 
+                            class="w-full py-4 squircle text-[10px] font-black uppercase tracking-[0.2em] border border-white/10 hover:bg-white hover:text-black transition-all">
+                        Initialize Session
+                    </button>
                 </div>
             `;
         }
@@ -121,43 +232,38 @@
             const limit = Number(document.getElementById("input-minutes").value);
 
             try {
-                const res = await auth.authFetch(API, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                const res = await auth.authFetch("http://localhost:5500/youtube/playlist", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ url }),
                 });
                 const data = await res.json();
                 
                 if (data.videos) {
-                    timeline.innerHTML = ''; // Clear empty state
-                    let currentDay = 1;
-                    let dailyTotal = 0;
+                    wrapper.innerHTML = '';
+                    let currentDay = 1, dailyTotal = 0;
 
                     data.videos.forEach((video) => {
                         const match = video.duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
                         const mins = (Number(match?.[1]||0)*60 + Number(match?.[2]||0));
 
                         if (dailyTotal + mins > limit && dailyTotal > 0) {
-                            currentDay++;
-                            dailyTotal = 0;
-                            
-                            // Add a subtle Day Divider
-                            const divider = document.createElement('div');
-                            divider.className = 'day-divider h-64 flex items-center justify-center border-l border-white/5 mx-4';
-                            divider.innerHTML = `<span class="text-white/10 text-[10px] font-black uppercase tracking-[1em]">Phase ${currentDay}</span>`;
-                            timeline.appendChild(divider);
+                            currentDay++; dailyTotal = 0;
+                            const div = document.createElement('div');
+                            div.className = 'phase-divider shrink-0 mx-10 text-[10px] font-black uppercase tracking-[1em]';
+                            div.style.setProperty('--phase-color', colors[(currentDay-1)%colors.length]);
+                            div.innerHTML = `PHASE 0${currentDay}`;
+                            wrapper.appendChild(div);
                         }
 
-                        const widgetWrap = document.createElement('div');
-                        widgetWrap.innerHTML = createVideoWidget(video, currentDay);
-                        timeline.appendChild(widgetWrap.firstElementChild);
-                        
+                        const cardWrap = document.createElement('div');
+                        cardWrap.innerHTML = createCard(video, currentDay);
+                        wrapper.appendChild(cardWrap.firstElementChild);
                         dailyTotal += mins;
                     });
+                    
+                    setTimeout(() => { clampScroll(); targetX = 0; }, 200);
                 }
-            } catch (err) {
-                console.error("System sync failed:", err);
-            }
+            } catch (err) { console.error(err); }
         };
     </script>
 </body>
