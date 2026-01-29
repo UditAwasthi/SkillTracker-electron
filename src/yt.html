@@ -1,356 +1,188 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Komorebi • Constellation Drift</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <title>Planner Architecture | SkillTracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+      @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap");
+
+      :root {
+        --bg: #ffffff;
+        --card: #f9f9f9;
+        --border: #f1f1f1;
+        --accent: #ff5733; /* Streak Orange */
+        --mastery: #000000;
+      }
 
       body {
-        margin: 0;
-        overflow: hidden;
-        background-color: #000;
-        font-family: 'Inter', sans-serif;
-        color: white;
-        letter-spacing: -0.03em;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        background-color: var(--bg);
+        color: #1a1a1a;
+        padding: 40px 20px;
       }
 
-      .glass {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(30px);
-        -webkit-backdrop-filter: blur(30px);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+      .widget {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 32px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      .squircle { border-radius: 24px; }
-      .squircle-lg { border-radius: 38px; }
-
-      #ui-layer {
-        position: fixed;
-        inset: 0;
-        z-index: 10;
-        pointer-events: none;
-        display: flex;
-        flex-direction: column;
-        justify-content:间;
-        padding: 40px;
+      .widget:hover {
+        background: #fff;
+        border-color: #000;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
       }
 
-      .interactive { pointer-events: auto; }
-
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(15px); }
-        to { opacity: 1; transform: translateY(0); }
+      .label-caps {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #a1a1aa;
+        display: block;
       }
 
-      .animate-ui { animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-      canvas { display: block; }
+      input::placeholder { color: #d1d1d6; }
+      
+      .custom-scrollbar::-webkit-scrollbar { height: 4px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #000; border-radius: 10px; }
     </style>
   </head>
-  <body class="antialiased">
-    <div id="ui-layer">
-      <nav class="flex justify-between items-center animate-ui">
-        <div class="flex items-center gap-3">
-          <div class="w-5 h-5 bg-white rounded-[5px]"></div>
-          <span class="font-bold text-sm tracking-tight uppercase">Komorebi</span>
+  <body>
+    <div class="max-w-6xl mx-auto space-y-10">
+      
+      <header class="flex flex-col md:flex-row justify-between items-end gap-6 px-4">
+        <div class="flex-1">
+          <p class="label-caps mb-2">Temporal Engine</p>
+          <h1 class="text-5xl font-black tracking-tighter">YT Day Planner</h1>
         </div>
-        <div class="flex items-center gap-6">
-          <span class="text-[10px] font-medium text-white/30 uppercase tracking-widest">System v2.0.1</span>
-        </div>
-      </nav>
+        
+        <form id="form" class="widget p-2 flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+          <input
+            id="input-url"
+            placeholder="YouTube Playlist URL"
+            class="bg-transparent px-6 py-3 rounded-2xl outline-none text-sm font-semibold min-w-[300px]"
+            required
+          />
+          <input
+            id="input-minutes"
+            type="number"
+            placeholder="Min/Day"
+            class="bg-white px-4 py-3 rounded-2xl outline-none text-sm font-bold border border-gray-100 w-24"
+            required
+          />
+          <button class="bg-black text-white px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform active:scale-95">
+            Generate
+          </button>
+        </form>
+      </header>
 
-      <div class="flex-1 flex flex-col justify-center items-center">
-        <div class="w-full max-w-xl animate-ui" style="animation-delay: 0.1s;">
-          <h1 class="text-4xl font-extrabold tracking-tighter mb-8 text-center">
-            DRIFT <span class="text-white/20 italic">PLAYLISTS.</span>
-          </h1>
-          
-          <form id="form" class="interactive glass p-2 squircle flex gap-2">
-            <input 
-              id="input" 
-              placeholder="Paste YouTube playlist URL" 
-              class="bg-transparent border-none outline-none flex-1 px-6 text-sm font-light text-white placeholder:text-white/20"
-              required 
-            />
-            <button class="bg-white text-black px-8 py-3 squircle text-xs font-bold hover:opacity-90 transition-all uppercase tracking-widest">
-              Load
-            </button>
-          </form>
-          <div id="status" class="mt-4 text-[10px] text-center text-white/20 uppercase tracking-[0.2em]">Ready for input</div>
-        </div>
-      </div>
+      <hr class="border-gray-100 mx-4" />
 
-      <footer class="flex justify-between items-center animate-ui" style="animation-delay: 0.2s;">
-        <div class="flex gap-12">
-          <div class="space-y-1">
-            <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Navigation</p>
-            <p class="text-[11px] text-white/40">WASD to Move • Scroll to Zoom</p>
-          </div>
-          <div class="space-y-1">
-            <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Engine</p>
-            <p class="text-[11px] text-white/40">Three.js Obsidian</p>
-          </div>
+      <main id="output" class="space-y-12">
+        <div class="text-center py-20">
+          <p class="label-caps">Status: Waiting for Input</p>
+          <p class="text-gray-300 font-medium mt-2">Paste a playlist link above to architect your schedule.</p>
         </div>
-        <div class="flex items-center gap-4">
-          <div class="h-[1px] w-12 bg-white/10"></div>
-          <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest italic">Constellation Drift</span>
-        </div>
-      </footer>
+      </main>
+
     </div>
-
-    <div class="fixed -bottom-[10%] -left-[5%] w-[40%] h-[40%] bg-emerald-500/[0.03] rounded-full blur-[120px] pointer-events-none"></div>
 
     <script type="module">
       import auth from "./js/auth.js";
 
-      /* ===============================
-        CONFIG & CONSTANTS
-      =============================== */
-      const CONFIG = {
-        API: "http://localhost:5500/youtube/playlist",
-        SCENE_COLOR: 0x000000,
-        ACCELERATION: 0.05,
-        FRICTION: 0.92,
-        ROTATION_SENSITIVITY: 0.002,
-        PANEL_SPACING: 15,
-      };
+      const API = "http://localhost:5500/youtube/playlist";
+      const output = document.getElementById("output");
 
-      /* ===============================
-        THREE.JS BOILERPLATE
-      =============================== */
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(CONFIG.SCENE_COLOR);
-      scene.fog = new THREE.Fog(CONFIG.SCENE_COLOR, 20, 250);
-
-      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
-      camera.position.set(0, 0, 15);
-
-      const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(renderer.domElement);
-
-      /* ===============================
-        UTILITIES: SKILLTRACKER STYLE TEXTURE
-      =============================== */
-      function formatDuration(iso) {
-        if (!iso) return "";
+      function isoToMinutes(iso) {
+        if (!iso) return 0;
         const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-        const h = match[1] ? match[1] + ":" : "";
-        const m = (match[2] || "0").padStart(2, "0");
-        const s = (match[3] || "0").padStart(2, "0");
-        return `${h}${m}:${s}`;
+        const h = Number(match?.[1] || 0);
+        const m = Number(match?.[2] || 0);
+        const s = Number(match?.[3] || 0);
+        return h * 60 + m + s / 60;
       }
 
-      async function createVideoTexture(video) {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = 512;
-        canvas.height = 384;
-
-        // Dark Obsidian Card Background
-        ctx.fillStyle = "#050505";
-        ctx.beginPath();
-        ctx.roundRect(0, 0, 512, 384, 40);
-        ctx.fill();
-        
-        // Subtle Border
-        ctx.strokeStyle = "rgba(255,255,255,0.08)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = video.thumbnails;
-
-        return new Promise((resolve) => {
-          img.onload = () => {
-            // Draw Thumbnail (Squircle)
-            ctx.save();
-            ctx.beginPath();
-            ctx.roundRect(20, 20, 472, 260, 25);
-            ctx.clip();
-            ctx.drawImage(img, 20, 20, 472, 260);
-            ctx.restore();
-
-            // Duration Badge (Glass Style)
-            const dur = formatDuration(video.duration);
-            ctx.fillStyle = "rgba(0,0,0,0.7)";
-            ctx.beginPath();
-            ctx.roundRect(400, 235, 80, 34, 12);
-            ctx.fill();
-            ctx.fillStyle = "white";
-            ctx.font = "bold 16px Inter, sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText(dur, 440, 258);
-
-            // Title Text (SkillTracker Typography)
-            ctx.textAlign = "left";
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "800 24px Inter, sans-serif";
-            const title = video.title.length > 32 ? video.title.substring(0, 32) + "..." : video.title;
-            ctx.fillText(title.toUpperCase(), 30, 325);
-
-            // Channel Text (Subtle Accent)
-            ctx.fillStyle = "rgba(255,255,255,0.3)";
-            ctx.font = "bold 12px Inter, sans-serif";
-            ctx.letterSpacing = "2px";
-            ctx.fillText(video.channel.toUpperCase(), 30, 355);
-
-            resolve(new THREE.CanvasTexture(canvas));
-          };
-        });
-      }
-
-      /* ===============================
-        CORE LOGIC: PANELS & STARS
-      =============================== */
-      let panels = [];
-      const starField = (() => {
-        const geo = new THREE.BufferGeometry();
-        const pos = [];
-        for (let i = 0; i < 3000; i++) {
-          pos.push((Math.random() - 0.5) * 600, (Math.random() - 0.5) * 600, -Math.random() * 800);
+      function distributeByDay(videos, limit) {
+        const days = [];
+        let current = [], total = 0;
+        for (const v of videos) {
+          const minutes = isoToMinutes(v.duration);
+          if (total + minutes > limit && current.length) {
+            days.push(current);
+            current = []; total = 0;
+          }
+          current.push(v);
+          total += minutes;
         }
-        geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-        const mat = new THREE.PointsMaterial({
-          color: 0xffffff,
-          size: 0.5,
-          transparent: true,
-          opacity: 0.2,
-        });
-        const points = new THREE.Points(geo, mat);
-        scene.add(points);
-        return points;
-      })();
+        if (current.length) days.push(current);
+        return days;
+      }
 
-      async function loadPlaylist(url) {
+      function render(days) {
+        output.innerHTML = "";
+        days.forEach((videos, i) => {
+          const totalDayMins = videos.reduce((acc, v) => acc + isoToMinutes(v.duration), 0);
+          
+          const section = document.createElement("section");
+          section.className = "animate-in fade-in slide-in-from-bottom-4 duration-700 px-4";
+          
+          section.innerHTML = `
+            <div class="flex justify-between items-end mb-6 border-b border-gray-100 pb-4">
+              <div>
+                <span class="label-caps">Phase ${i + 1}</span>
+                <h2 class="text-2xl font-black tracking-tight">Day Sequence</h2>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] font-black bg-black text-white px-2 py-0.5 rounded uppercase tracking-widest">
+                   ${totalDayMins.toFixed(0)} MIN TOTAL
+                </span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              ${videos.map(v => `
+                <a href="https://www.youtube.com/watch?v=${v.videoId}" target="_blank" class="widget p-4 group block">
+                  <div class="aspect-video rounded-2xl overflow-hidden mb-4 bg-gray-200 relative">
+                    <img src="${v.thumbnails}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <div class="absolute bottom-2 right-2 bg-black/80 text-white text-[9px] font-black px-2 py-1 rounded-lg backdrop-blur-md">
+                      ${isoToMinutes(v.duration).toFixed(0)}:00
+                    </div>
+                  </div>
+                  <p class="label-caps mb-1 text-[8px]">${v.channel}</p>
+                  <h3 class="text-sm font-bold leading-snug line-clamp-2 group-hover:underline">${v.title}</h3>
+                </a>
+              `).join('')}
+            </div>
+          `;
+          output.appendChild(section);
+        });
+      }
+
+      document.getElementById("form").onsubmit = async (e) => {
+        e.preventDefault();
+        const url = document.getElementById("input-url").value.trim();
+        const minutes = Number(document.getElementById("input-minutes").value);
+
+        output.innerHTML = `<div class="py-20 text-center animate-pulse">
+          <p class="label-caps">Synchronizing with YouTube API...</p>
+        </div>`;
+
         try {
-          document.getElementById('status').innerText = "Acquiring Neural Path...";
-          const res = await auth.authFetch(CONFIG.API, {
+          const res = await auth.authFetch(API, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url }),
           });
           const data = await res.json();
-
-          panels.forEach((p) => scene.remove(p));
-          panels = [];
-
-          for (let i = 0; i < data.videos.length; i++) {
-            const video = data.videos[i];
-            const texture = await createVideoTexture(video);
-            const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-            const geo = new THREE.PlaneGeometry(8, 6);
-            const mesh = new THREE.Mesh(geo, mat);
-
-            mesh.position.set(Math.sin(i * 0.8) * 15, Math.cos(i * 0.5) * 8, -i * CONFIG.PANEL_SPACING);
-            mesh.userData = video;
-            scene.add(mesh);
-            panels.push(mesh);
-          }
-          document.getElementById('status').innerText = `${data.videos.length} NODES LOADED`;
+          render(distributeByDay(data.videos, minutes));
         } catch (err) {
-          document.getElementById('status').innerText = "ERROR DETECTED";
-          console.error(err);
+          output.innerHTML = `<p class="text-red-500 font-bold text-center py-20">Network Architecture Error: Verify Playlist URL</p>`;
         }
-      }
-
-      /* ===============================
-        INPUT & ANIMATION (Original Script)
-      =============================== */
-      const inputState = { keys: {}, yaw: 0, pitch: 0, velocity: new THREE.Vector3(), scroll: 0 };
-      const mouse = new THREE.Vector2();
-      const raycaster = new THREE.Raycaster();
-      let hoveredPanel = null;
-
-      window.addEventListener("keydown", (e) => (inputState.keys[e.key.toLowerCase()] = true));
-      window.addEventListener("keyup", (e) => (inputState.keys[e.key.toLowerCase()] = false));
-      window.addEventListener("wheel", (e) => (inputState.scroll += e.deltaY * 0.005));
-      window.addEventListener("mousemove", (e) => {
-        inputState.yaw -= e.movementX * CONFIG.ROTATION_SENSITIVITY;
-        inputState.pitch -= e.movementY * CONFIG.ROTATION_SENSITIVITY;
-        inputState.pitch = Math.max(-Math.PI / 2.5, Math.min(Math.PI / 2.5, inputState.pitch));
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-      });
-
-      window.addEventListener("click", () => {
-        raycaster.setFromCamera(mouse, camera);
-        const hits = raycaster.intersectObjects(panels);
-        if (hits.length) window.open(`https://www.youtube.com/watch?v=${hits[0].object.userData.videoId}`, "_blank");
-      });
-
-      function animateHover(panel) {
-        panel.scale.lerp(new THREE.Vector3(1.1, 1.1, 1.1), 0.15);
-      }
-
-      function resetPanel(panel) {
-        panel.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
-      }
-
-      function animate() {
-        requestAnimationFrame(animate);
-        camera.rotation.order = "YXZ";
-        camera.rotation.y = inputState.yaw;
-        camera.rotation.x = inputState.pitch;
-
-        const moveDir = new THREE.Vector3(0, 0, 0);
-        if (inputState.keys["w"]) moveDir.z -= 1;
-        if (inputState.keys["s"]) moveDir.z += 1;
-        if (inputState.keys["a"]) moveDir.x -= 1;
-        if (inputState.keys["d"]) moveDir.x += 1;
-
-        moveDir.normalize().applyEuler(camera.rotation);
-        inputState.velocity.add(moveDir.multiplyScalar(CONFIG.ACCELERATION));
-        inputState.velocity.z -= inputState.scroll;
-        inputState.velocity.multiplyScalar(CONFIG.FRICTION);
-        inputState.scroll *= CONFIG.FRICTION;
-        camera.position.add(inputState.velocity);
-
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(panels);
-
-        if (intersects.length > 0) {
-          if (hoveredPanel && hoveredPanel !== intersects[0].object) resetPanel(hoveredPanel);
-          hoveredPanel = intersects[0].object;
-          animateHover(hoveredPanel);
-        } else {
-          if (hoveredPanel) resetPanel(hoveredPanel);
-          hoveredPanel = null;
-        }
-
-        const time = Date.now() * 0.001;
-        panels.forEach((p, i) => {
-          if (p !== hoveredPanel) {
-             p.position.y += Math.sin(time + i) * 0.002;
-             p.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
-          }
-          p.lookAt(camera.position);
-        });
-
-        starField.rotation.z += 0.0001;
-        renderer.render(scene, camera);
-      }
-
-      document.getElementById("form").onsubmit = (e) => {
-        e.preventDefault();
-        loadPlaylist(document.getElementById("input").value.trim());
       };
-
-      window.addEventListener("resize", () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-
-      animate();
     </script>
   </body>
 </html>
