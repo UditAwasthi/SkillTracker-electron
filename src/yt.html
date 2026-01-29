@@ -1,188 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Planner Architecture | SkillTracker</title>
+    <title>Temporal Engine | Linear Stream</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap");
 
-      :root {
-        --bg: #ffffff;
-        --card: #f9f9f9;
-        --border: #f1f1f1;
-        --accent: #ff5733; /* Streak Orange */
-        --mastery: #000000;
-      }
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background-color: #050505;
+            color: #ffffff;
+            margin: 0;
+            overflow-x: hidden;
+        }
 
-      body {
-        font-family: "Plus Jakarta Sans", sans-serif;
-        background-color: var(--bg);
-        color: #1a1a1a;
-        padding: 40px 20px;
-      }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-      .widget {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 32px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
+        /* Custom Scrollbar for the timeline */
+        .timeline-container::-webkit-scrollbar {
+            height: 6px;
+        }
+        .timeline-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .timeline-container::-webkit-scrollbar-thumb {
+            background: #ff5733;
+            border-radius: 10px;
+        }
 
-      .widget:hover {
-        background: #fff;
-        border-color: #000;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
-      }
-
-      .label-caps {
-        font-size: 10px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: #a1a1aa;
-        display: block;
-      }
-
-      input::placeholder { color: #d1d1d6; }
-      
-      .custom-scrollbar::-webkit-scrollbar { height: 4px; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: #000; border-radius: 10px; }
-    </style>
-  </head>
-  <body>
-    <div class="max-w-6xl mx-auto space-y-10">
-      
-      <header class="flex flex-col md:flex-row justify-between items-end gap-6 px-4">
-        <div class="flex-1">
-          <p class="label-caps mb-2">Temporal Engine</p>
-          <h1 class="text-5xl font-black tracking-tighter">YT Day Planner</h1>
-        </div>
+        .video-card {
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
         
-        <form id="form" class="widget p-2 flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-          <input
-            id="input-url"
-            placeholder="YouTube Playlist URL"
-            class="bg-transparent px-6 py-3 rounded-2xl outline-none text-sm font-semibold min-w-[300px]"
-            required
-          />
-          <input
-            id="input-minutes"
-            type="number"
-            placeholder="Min/Day"
-            class="bg-white px-4 py-3 rounded-2xl outline-none text-sm font-bold border border-gray-100 w-24"
-            required
-          />
-          <button class="bg-black text-white px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform active:scale-95">
-            Generate
-          </button>
-        </form>
-      </header>
+        .video-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 87, 51, 0.4);
+            background: rgba(255, 255, 255, 0.06);
+        }
 
-      <hr class="border-gray-100 mx-4" />
+        .day-divider {
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
 
-      <main id="output" class="space-y-12">
-        <div class="text-center py-20">
-          <p class="label-caps">Status: Waiting for Input</p>
-          <p class="text-gray-300 font-medium mt-2">Paste a playlist link above to architect your schedule.</p>
+    <header class="p-8 flex flex-col md:flex-row justify-between items-start gap-6 z-20">
+        <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.3em] text-orange-500 mb-1">Architecture v3.0</p>
+            <h1 class="text-4xl font-black tracking-tighter italic">TEMPORAL ENGINE</h1>
         </div>
-      </main>
 
-    </div>
+        <form id="form" class="glass p-2 rounded-3xl flex gap-2 w-full md:w-auto">
+            <input id="input-url" placeholder="Playlist URL" class="bg-transparent px-6 py-3 rounded-2xl outline-none text-sm font-semibold flex-grow md:min-w-[350px] text-white" required />
+            <input id="input-minutes" type="number" placeholder="Min/Day" class="bg-white/5 px-4 py-3 rounded-2xl outline-none text-sm font-bold w-24 text-white" required />
+            <button class="bg-white text-black px-8 py-3 rounded-2xl text-xs font-black uppercase hover:bg-orange-500 hover:text-white transition-all active:scale-95">Generate</button>
+        </form>
+    </header>
+
+    <main id="timeline" class="timeline-container flex flex-nowrap items-center gap-8 overflow-x-auto px-10 pb-20 pt-10 flex-grow">
+        <div id="empty-state" class="w-full text-center opacity-20 py-20">
+            <p class="text-2xl font-light">Paste a playlist to initialize the stream...</p>
+        </div>
+    </main>
 
     <script type="module">
-      import auth from "./js/auth.js";
+        import auth from "./js/auth.js";
 
-      const API = "http://localhost:5500/youtube/playlist";
-      const output = document.getElementById("output");
+        const API = "http://localhost:5500/youtube/playlist";
+        const timeline = document.getElementById('timeline');
 
-      function isoToMinutes(iso) {
-        if (!iso) return 0;
-        const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-        const h = Number(match?.[1] || 0);
-        const m = Number(match?.[2] || 0);
-        const s = Number(match?.[3] || 0);
-        return h * 60 + m + s / 60;
-      }
-
-      function distributeByDay(videos, limit) {
-        const days = [];
-        let current = [], total = 0;
-        for (const v of videos) {
-          const minutes = isoToMinutes(v.duration);
-          if (total + minutes > limit && current.length) {
-            days.push(current);
-            current = []; total = 0;
-          }
-          current.push(v);
-          total += minutes;
+        function parseDuration(iso) {
+            const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            const h = match[1] ? match[1].padStart(2, '0') + ':' : '';
+            const m = (match[2] || '0').padStart(2, '0');
+            const s = (match[3] || '0').padStart(2, '0');
+            return `${h}${m}:${s}`;
         }
-        if (current.length) days.push(current);
-        return days;
-      }
 
-      function render(days) {
-        output.innerHTML = "";
-        days.forEach((videos, i) => {
-          const totalDayMins = videos.reduce((acc, v) => acc + isoToMinutes(v.duration), 0);
-          
-          const section = document.createElement("section");
-          section.className = "animate-in fade-in slide-in-from-bottom-4 duration-700 px-4";
-          
-          section.innerHTML = `
-            <div class="flex justify-between items-end mb-6 border-b border-gray-100 pb-4">
-              <div>
-                <span class="label-caps">Phase ${i + 1}</span>
-                <h2 class="text-2xl font-black tracking-tight">Day Sequence</h2>
-              </div>
-              <div class="text-right">
-                <span class="text-[10px] font-black bg-black text-white px-2 py-0.5 rounded uppercase tracking-widest">
-                   ${totalDayMins.toFixed(0)} MIN TOTAL
-                </span>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              ${videos.map(v => `
-                <a href="https://www.youtube.com/watch?v=${v.videoId}" target="_blank" class="widget p-4 group block">
-                  <div class="aspect-video rounded-2xl overflow-hidden mb-4 bg-gray-200 relative">
-                    <img src="${v.thumbnails}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                    <div class="absolute bottom-2 right-2 bg-black/80 text-white text-[9px] font-black px-2 py-1 rounded-lg backdrop-blur-md">
-                      ${isoToMinutes(v.duration).toFixed(0)}:00
+        function createVideoWidget(video, dayIndex) {
+            const duration = parseDuration(video.duration);
+            
+            return `
+                <div class="video-card glass p-5 rounded-[32px] w-[380px] shrink-0 border border-white/10 group">
+                    <div class="w-full aspect-video rounded-2xl bg-cover bg-center mb-4 ring-1 ring-white/10 shadow-inner overflow-hidden relative">
+                        <img src="${video.thumbnails}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     </div>
-                  </div>
-                  <p class="label-caps mb-1 text-[8px]">${v.channel}</p>
-                  <h3 class="text-sm font-bold leading-snug line-clamp-2 group-hover:underline">${v.title}</h3>
-                </a>
-              `).join('')}
-            </div>
-          `;
-          output.appendChild(section);
-        });
-      }
+                    
+                    <div class="space-y-3 px-1">
+                        <div class="flex justify-between items-center">
+                            <span class="bg-orange-500/20 text-orange-500 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-tighter">Day ${dayIndex}</span>
+                            <span class="text-white/40 text-[10px] font-bold font-mono">${duration}</span>
+                        </div>
 
-      document.getElementById("form").onsubmit = async (e) => {
-        e.preventDefault();
-        const url = document.getElementById("input-url").value.trim();
-        const minutes = Number(document.getElementById("input-minutes").value);
+                        <div>
+                            <h2 class="text-lg font-bold text-white leading-tight line-clamp-2 min-h-[3.5rem]">${video.title}</h2>
+                            <p class="text-white/40 text-[11px] font-medium mt-1 uppercase tracking-widest">${video.channel}</p>
+                        </div>
 
-        output.innerHTML = `<div class="py-20 text-center animate-pulse">
-          <p class="label-caps">Synchronizing with YouTube API...</p>
-        </div>`;
-
-        try {
-          const res = await auth.authFetch(API, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url }),
-          });
-          const data = await res.json();
-          render(distributeByDay(data.videos, minutes));
-        } catch (err) {
-          output.innerHTML = `<p class="text-red-500 font-bold text-center py-20">Network Architecture Error: Verify Playlist URL</p>`;
+                        <div class="pt-2">
+                            <button onclick="window.open('https://youtube.com/watch?v=${video.videoId}')" class="w-full bg-white text-black py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-500 hover:text-white transition-colors duration-300 active:scale-95">
+                                Start Sequence
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
-      };
+
+        document.getElementById("form").onsubmit = async (e) => {
+            e.preventDefault();
+            const url = document.getElementById("input-url").value.trim();
+            const limit = Number(document.getElementById("input-minutes").value);
+
+            try {
+                const res = await auth.authFetch(API, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url }),
+                });
+                const data = await res.json();
+                
+                if (data.videos) {
+                    timeline.innerHTML = ''; // Clear empty state
+                    let currentDay = 1;
+                    let dailyTotal = 0;
+
+                    data.videos.forEach((video) => {
+                        const match = video.duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+                        const mins = (Number(match?.[1]||0)*60 + Number(match?.[2]||0));
+
+                        if (dailyTotal + mins > limit && dailyTotal > 0) {
+                            currentDay++;
+                            dailyTotal = 0;
+                            
+                            // Add a subtle Day Divider
+                            const divider = document.createElement('div');
+                            divider.className = 'day-divider h-64 flex items-center justify-center border-l border-white/5 mx-4';
+                            divider.innerHTML = `<span class="text-white/10 text-[10px] font-black uppercase tracking-[1em]">Phase ${currentDay}</span>`;
+                            timeline.appendChild(divider);
+                        }
+
+                        const widgetWrap = document.createElement('div');
+                        widgetWrap.innerHTML = createVideoWidget(video, currentDay);
+                        timeline.appendChild(widgetWrap.firstElementChild);
+                        
+                        dailyTotal += mins;
+                    });
+                }
+            } catch (err) {
+                console.error("System sync failed:", err);
+            }
+        };
     </script>
-  </body>
+</body>
 </html>
