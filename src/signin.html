@@ -1,153 +1,184 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
     <title>SkillTracker | Authorization</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #000;
-            color: #fff;
-            letter-spacing: -0.03em;
-        }
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
 
-        .squircle { border-radius: 38px; }
-        .input-squircle { border-radius: 20px; }
-        
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #000;
+        color: #fff;
+        letter-spacing: -0.03em;
+      }
 
-        .input-field {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            color: white;
-        }
+      .squircle {
+        border-radius: 38px;
+      }
+      .input-squircle {
+        border-radius: 20px;
+      }
 
-        .input-field:focus {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.3);
-            outline: none;
-        }
+      .glass {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(30px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+      .input-field {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: white;
+      }
 
-        .animate-ui { animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+      .input-field:focus {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.3);
+        outline: none;
+      }
     </style>
-</head>
-<body class="antialiased min-h-screen flex flex-col justify-between overflow-hidden">
+  </head>
 
-    <nav class="flex justify-between items-center px-10 py-8 relative z-50">
-        <div class="flex items-center gap-3">
-            <div class="w-5 h-5 bg-white rounded-[5px]"></div>
-            <span class="font-bold text-sm tracking-tight">SkillTracker</span>
-        </div>
-        
-        <div class="flex items-center gap-6">
-            <span class="text-[11px] font-medium text-white/30 uppercase tracking-widest">Secure Access</span>
-            <a href="signup.html" class="text-xs font-semibold text-white/50 hover:text-white transition-colors">
-                Initialize Identity
-            </a>
-        </div>
-    </nav>
+  <body class="min-h-screen flex flex-col justify-center items-center px-10">
+    <div class="w-full max-w-[420px]">
+      <h1 class="text-5xl font-extrabold mb-6">
+        WELCOME <span class="text-white/20 italic">BACK.</span>
+      </h1>
 
-    <main class="px-10 flex-1 flex flex-col justify-center items-center">
-        <div class="w-full max-w-[420px] animate-ui">
-            <div class="mb-10 text-center md:text-left">
-                <h1 class="text-5xl font-extrabold tracking-tighter leading-none mb-4">
-                    WELCOME <br> <span class="text-white/20 italic">BACK.</span>
-                </h1>
-                <p class="text-white/40 text-sm font-light">Verify your credentials to resume the session.</p>
-            </div>
+      <div class="glass squircle p-10">
+        <!-- EMAIL LOGIN -->
+        <form id="signinForm" class="space-y-6">
+          <div>
+            <label class="block text-xs text-white/40 mb-2">Email</label>
+            <input
+              id="email"
+              type="email"
+              required
+              class="input-field w-full px-5 py-4 input-squircle text-sm"
+              placeholder="name@domain.com"
+            />
+          </div>
 
-            <div class="glass squircle p-10">
-                <form id="signinForm" class="space-y-6">
-                    <div>
-                        <label class="block text-[10px] font-bold text-white/20 uppercase tracking-widest mb-2 px-1">Identity (Email)</label>
-                        <input type="email" required placeholder="name@domain.com" 
-                               class="input-field w-full px-5 py-4 input-squircle text-sm placeholder:text-white/10" />
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-white/20 uppercase tracking-widest mb-2 px-1">Access Key</label>
-                        <input type="password" required placeholder="••••••••" 
-                               class="input-field w-full px-5 py-4 input-squircle text-sm placeholder:text-white/10" />
-                    </div>
-                    
-                    <button type="submit" class="w-full bg-white text-black py-4 input-squircle font-black text-xs uppercase tracking-widest hover:bg-neutral-200 transition-all duration-300 mt-4">
-                        Establish Connection →
-                    </button>
-                </form>
+          <div>
+            <label class="block text-xs text-white/40 mb-2">Password</label>
+            <input
+              id="password"
+              type="password"
+              required
+              class="input-field w-full px-5 py-4 input-squircle text-sm"
+              placeholder="••••••••"
+            />
+          </div>
 
-                <div class="mt-8 text-center">
-                    <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">
-                        New Operator? <a href="signup.html" class="text-white hover:underline transition ml-1">Initialize Here</a>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </main>
+          <button
+            type="submit"
+            class="w-full bg-white text-black py-4 input-squircle font-bold text-xs uppercase tracking-widest"
+          >
+            Establish Connection →
+          </button>
+        </form>
 
-    <footer class="px-10 py-10 flex justify-between items-center animate-ui" style="animation-delay: 0.3s;">
-        <div class="flex gap-10">
-            <div class="space-y-1">
-                <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Protocol</p>
-                <p class="text-xs text-white/40">JWT Header Auth</p>
-            </div>
-            <div class="space-y-1">
-                <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Status</p>
-                <div class="flex items-center gap-2">
-                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                    <p class="text-xs text-white/40">Gateway Open</p>
-                </div>
-            </div>
+        <!-- DIVIDER -->
+        <div class="flex items-center my-6">
+          <div class="flex-1 h-px bg-white/10"></div>
+          <span class="px-3 text-xs text-white/30 uppercase tracking-widest"
+            >OR</span
+          >
+          <div class="flex-1 h-px bg-white/10"></div>
         </div>
 
-        <div class="flex items-center gap-4">
-            <div class="h-[1px] w-12 bg-white/10"></div>
-            <span class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Obsidian Edition</span>
-        </div>
-    </footer>
+        <!-- GOOGLE LOGIN -->
+        <button
+          id="googleLogin"
+          class="w-full bg-white/10 hover:bg-white/20 text-white py-4 input-squircle font-bold text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3"
+        >
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path
+              fill="#EA4335"
+              d="M24 9.5c3.3 0 6.3 1.1 8.6 3.2l6.4-6.4C34.8 2.5 29.8 0 24 0 14.6 0 6.6 5.5 2.6 13.6l7.7 6C12.3 13.7 17.7 9.5 24 9.5z"
+            />
+            <path
+              fill="#4285F4"
+              d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.5c-.5 2.8-2.1 5.2-4.5 6.8l7 5.4c4.1-3.8 6.5-9.4 6.5-16.7z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M10.3 28.4c-.5-1.5-.8-3.1-.8-4.8s.3-3.3.8-4.8l-7.7-6C.9 16.1 0 19 0 23.6s.9 7.5 2.6 10.8l7.7-6z"
+            />
+            <path
+              fill="#34A853"
+              d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7-5.4c-2 1.3-4.6 2.1-8.9 2.1-6.3 0-11.7-4.2-13.6-10.1l-7.7 6C6.6 42.5 14.6 48 24 48z"
+            />
+          </svg>
 
-    <div class="fixed -bottom-[20%] -right-[10%] w-[50%] h-[50%] bg-white/[0.02] rounded-full blur-[120px] pointer-events-none"></div>
+          Continue with Google
+        </button>
+      </div>
+    </div>
 
-    <script type="module">
-        import auth from './js/auth.js';
-        const signinForm = document.getElementById('signinForm');
+    <script>
+      // EMAIL LOGIN (unchanged)
+      document.getElementById("signinForm").onsubmit = async (e) => {
+        e.preventDefault();
 
-        signinForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const email = signinForm.querySelectorAll('input')[0].value;
-            const password = signinForm.querySelectorAll('input')[1].value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
 
-            try {
-                const res = await fetch("http://localhost:5500/auth/login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password })
-                });
+        try {
+          const res = await fetch("http://localhost:5500/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
 
-                const data = await res.json();
-                if (res.status === 200) {
-                    auth.setSession(data);
-                    window.location.href = 'dashboard.html';
-                } else {
-                    alert(data.error || "Access Denied.");
-                }
-            } catch (err) {
-                console.error("Login Error:", err);
+          const data = await res.json();
+
+          if (res.ok) {
+            localStorage.setItem("accessToken", data.accessToken);
+            localStorage.setItem("refreshToken", data.refreshToken);
+            window.location.href = "dashboard.html";
+          } else {
+            alert(data.error || "Access Denied");
+          }
+        } catch {
+          alert("Backend unreachable");
+        }
+      };
+
+      // GOOGLE LOGIN (opens new window)
+      document.getElementById("googleLogin").onclick = () => {
+        // 1️⃣ Open OAuth in separate popup window
+        const authWindow = window.open(
+          "http://localhost:5500/auth/google",
+          "GoogleLogin",
+          "width=500,height=600",
+        );
+
+        // 2️⃣ Poll backend for tokens
+        const oauthInterval = setInterval(async () => {
+          try {
+            const res = await fetch("http://localhost:5500/auth/oauth-tokens");
+
+            if (res.ok) {
+              const data = await res.json();
+
+              localStorage.setItem("accessToken", data.accessToken);
+              localStorage.setItem("refreshToken", data.refreshToken);
+
+              clearInterval(oauthInterval);
+
+              if (authWindow) authWindow.close();
+
+              window.location.href = "dashboard.html";
             }
-        };
+          } catch {}
+        }, 1500);
+      };
     </script>
-</body>
+  </body>
 </html>
