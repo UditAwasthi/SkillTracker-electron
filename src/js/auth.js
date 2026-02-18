@@ -1,4 +1,5 @@
-const API_BASE = "http://localhost:5500";
+// const API_BASE = "http://localhost:5500";
+const API_BASE = "https://st-v01.onrender.com";
 
 const auth = {
   getHeaders: () => ({

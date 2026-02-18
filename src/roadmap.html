@@ -1,123 +1,305 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Learning Architect | Roadmap Generator</title>
+    <title>Path of the Architect | Zen Edition</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Shippori+Mincho:wght@400;500;700;800&display=swap"
       rel="stylesheet"
     />
 
     <style>
-      body {
-        font-family: "Plus Jakarta Sans", sans-serif;
-        background: #ffffff;
-        color: #111;
+      :root {
+        --surface: #ffffff;
+        --background: #f5f5f7; /* Apple off-white */
+        --ink: #1d1d1f;
+        --ink-light: #86868b;
+        --hanko-red: #d9381e; /* Traditional vermilion */
+        --border-color: rgba(0, 0, 0, 0.06);
       }
 
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--background);
+        color: var(--ink);
+        overflow-x: hidden;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      h1,
+      h2,
+      h3,
+      .zen-serif {
+        font-family: "Shippori Mincho", serif;
+      }
+
+      /* Modern Apple-style Widget */
       .widget {
-        background: #f9f9f9;
-        border: 1px solid #eee;
-        border-radius: 28px;
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: 32px;
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.04);
+        position: relative;
+        z-index: 10;
       }
 
       .label-caps {
-        font-size: 10px;
-        font-weight: 800;
+        font-family: "Inter", sans-serif;
+        font-size: 11px;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: #9ca3af;
+        letter-spacing: 0.15em;
+        color: var(--ink-light);
+      }
+
+      /* --- HIGH PERFORMANCE MAP STYLES --- */
+      .game-container {
+        position: relative;
+        padding: 60px 0;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      #svg-path-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      /* Crisp, hardware-accelerated SVG line. No blurs. */
+      .path-line {
+        fill: none;
+        stroke: #e5e5ea;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .level-row {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 80px;
+        position: relative;
+        z-index: 10;
+      }
+
+      .level-row.left {
+        justify-content: flex-start;
+        padding-left: 5%;
+      }
+      .level-row.right {
+        justify-content: flex-end;
+        padding-right: 5%;
+      }
+      .level-row.center {
+        justify-content: center;
+      }
+
+      /* Modern Card */
+      .level-card {
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        width: 320px;
+        position: relative;
+        transition:
+          transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+          box-shadow 0.2s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        cursor: pointer;
+      }
+
+      .level-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      }
+
+      /* Modern Digital Hanko Stamp */
+      .hanko-badge {
+        position: absolute;
+        top: -16px;
+        left: -16px;
+        background: var(--surface);
+        color: var(--hanko-red);
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Shippori Mincho", serif;
+        font-weight: 700;
+        font-size: 1.25rem;
+        transform: rotate(-3deg);
+        border: 2px solid var(--hanko-red);
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(217, 56, 30, 0.15);
+        z-index: 20;
+      }
+
+      .anchor-dot {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        left: 50%;
+        top: 50%;
+        visibility: hidden;
+      }
+
+      /* Inputs & Buttons */
+      .zen-input {
+        background: #f5f5f7;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+      }
+      .zen-input:focus {
+        background: var(--surface);
+        border-color: #d2d2d7;
+        box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.02);
+      }
+
+      .btn-modern {
+        background: var(--surface);
+        color: var(--ink);
+        border: 1px solid #d2d2d7;
+        transition: all 0.2s ease;
+        border-radius: 999px; /* Pill shape */
+      }
+      .btn-modern:hover {
+        border-color: var(--ink);
+      }
+      .btn-modern.active {
+        background: var(--ink);
+        color: var(--surface);
+        border-color: var(--ink);
+      }
+
+      .btn-primary {
+        background: var(--ink);
+        color: var(--surface);
+        border-radius: 999px;
+        transition: all 0.2s ease;
+      }
+      .btn-primary:hover {
+        background: #333336;
+        transform: scale(1.02);
       }
     </style>
   </head>
 
-  <body class="p-6 md:p-12">
-    <div class="max-w-6xl mx-auto space-y-8">
-      <header class="flex justify-between items-end">
-        <div>
-          <span class="label-caps">AI SYSTEM</span>
-          <h1 class="text-5xl font-black tracking-tighter">
-            Roadmap Architect
-          </h1>
-        </div>
+  <body class="p-4 md:p-8 lg:p-12">
+    <div class="max-w-5xl mx-auto space-y-10 relative z-10">
+      <header class="text-center pt-8 pb-4">
+        <span class="label-caps text-gray-500">The Architect's Journey</span>
+        <h1
+          class="text-5xl md:text-6xl font-bold tracking-tight mt-3 text-gray-900 zen-serif"
+        >
+          A Clear Path.
+        </h1>
       </header>
 
-      <div class="widget p-8 md:p-12 space-y-10">
-        <!-- STEP 1 -->
-        <div id="step-1" class="space-y-6">
-          <span class="label-caps">Stage 01</span>
-          <h2 class="text-3xl font-bold">What do you want to master?</h2>
+      <div class="widget p-8 md:p-14 min-h-[500px] flex flex-col">
+        <div
+          id="step-1"
+          class="max-w-2xl mx-auto w-full text-center my-auto space-y-8"
+        >
+          <h2 class="text-3xl font-medium zen-serif text-gray-800">
+            What do you wish to master?
+          </h2>
 
-          <div class="flex gap-4">
+          <div class="flex flex-col gap-6 mt-6">
             <input
               id="userInput"
               type="text"
-              placeholder="e.g. I want to become a Flutter Developer in 6 months"
-              class="flex-1 px-6 py-4 rounded-xl border outline-none focus:ring-2 ring-black"
+              placeholder="e.g., I want to become a Flutter Developer in 6 months..."
+              class="zen-input w-full px-8 py-5 rounded-2xl outline-none text-lg text-center"
             />
             <button
               onclick="getQuestions()"
-              class="bg-black text-white px-8 py-4 rounded-xl font-bold"
+              class="btn-primary px-10 py-4 font-medium mx-auto text-lg shadow-md"
             >
-              Initialize
+              Begin
             </button>
           </div>
         </div>
 
-        <!-- STEP 2 -->
-        <div id="step-2" class="hidden space-y-8">
-          <div>
-            <span class="label-caps">Stage 02</span>
-            <h2 class="text-3xl font-bold">Fine-tuning</h2>
+        <div id="step-2" class="hidden space-y-10 w-full">
+          <div class="text-center">
+            <h2 class="text-3xl font-medium zen-serif text-gray-800">
+              Refine Your Focus
+            </h2>
+            <p class="text-gray-500 mt-2">
+              Select the parameters of your journey.
+            </p>
           </div>
 
           <div
             id="questions-area"
-            class="grid grid-cols-1 md:grid-cols-2 gap-8"
+            class="grid grid-cols-1 md:grid-cols-2 gap-6"
           ></div>
 
-          <button
-            onclick="generateFinalRoadmap()"
-            class="bg-black text-white px-12 py-4 rounded-xl font-black"
-          >
-            Generate Roadmap
-          </button>
+          <div class="text-center mt-12 pt-6 border-t border-gray-100">
+            <button
+              onclick="generateFinalRoadmap()"
+              class="btn-primary px-12 py-4 font-medium text-lg shadow-md"
+            >
+              Generate Map
+            </button>
+          </div>
         </div>
 
-        <!-- STEP 3 -->
-        <div id="step-3" class="hidden space-y-10">
-          <div>
-            <span id="roadmap-lang" class="label-caps"></span>
+        <div id="step-3" class="hidden relative w-full">
+          <div class="text-center mb-16">
+            <span
+              id="roadmap-lang"
+              class="label-caps bg-gray-100 text-gray-800 px-3 py-1 rounded-full"
+            ></span>
             <h2
               id="roadmap-title"
-              class="text-4xl font-black tracking-tighter"
+              class="text-4xl font-bold mt-4 text-gray-900 zen-serif"
             ></h2>
           </div>
 
-          <div id="roadmap-content" class="space-y-12"></div>
+          <div class="game-container" id="game-map">
+            <svg id="svg-path-container">
+              <path id="connector-path" class="path-line" d="" />
+            </svg>
+            <div id="levels-container"></div>
+          </div>
 
-          <button
-            onclick="location.reload()"
-            class="text-sm font-bold underline"
-          >
-            Start Over
-          </button>
+          <div class="text-center mt-16 pt-10 border-t border-gray-100">
+            <button
+              onclick="location.reload()"
+              class="text-sm font-medium text-gray-500 hover:text-black transition-colors"
+            >
+              Start a New Journey
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- LOADER -->
     <div
       id="loader"
-      class="hidden fixed inset-0 bg-white/90 flex items-center justify-center z-50"
+      class="hidden fixed inset-0 bg-[#f5f5f7]/90 flex items-center justify-center z-50 transition-opacity"
     >
       <div
-        class="w-14 h-14 border-4 border-gray-200 border-t-black rounded-full animate-spin"
-      ></div>
+        class="flex flex-col items-center gap-6 bg-white p-10 rounded-3xl shadow-xl border border-gray-100"
+      >
+        <div
+          class="w-12 h-12 border-4 border-gray-200 border-t-black rounded-full animate-spin"
+        ></div>
+        <p class="text-gray-800 font-medium">Crafting your path...</p>
+      </div>
     </div>
 
     <script type="module">
@@ -127,7 +309,6 @@
       window.setAnswer = setAnswer;
 
       let selectedAnswers = {};
-      let initialMessage = "";
 
       function showLoader(show) {
         document.getElementById("loader").classList.toggle("hidden", !show);
@@ -135,20 +316,20 @@
 
       // STEP 1 — GET QUESTIONS
       async function getQuestions() {
+        selectedAnswers = {};
         const msg = document.getElementById("userInput").value.trim();
         if (!msg) return;
 
-        initialMessage = msg;
         showLoader(true);
 
         try {
           const res = await auth.authFetch(
-            "http://localhost:5500/roadmap/getQuestions",
+            "https://st-v01.onrender.com/roadmap/getQuestions",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ message: msg }),
-            }
+              body: JSON.stringify({ topic: msg }),
+            },
           );
 
           const data = await res.json();
@@ -157,8 +338,7 @@
           document.getElementById("step-1").classList.add("hidden");
           document.getElementById("step-2").classList.remove("hidden");
         } catch (e) {
-          console.error(e);
-          alert("Failed to fetch questions");
+          alert("Failed to connect. Please try again.");
         } finally {
           showLoader(false);
         }
@@ -167,41 +347,37 @@
       function renderQuestions(questions) {
         const area = document.getElementById("questions-area");
         area.innerHTML = "";
-
         questions.forEach((q) => {
           const card = document.createElement("div");
-          card.className = "space-y-4";
-
+          card.className =
+            "flex flex-col p-6 rounded-3xl bg-gray-50/50 border border-gray-100";
           card.innerHTML = `
-            <span class="label-caps">${q.key.replace("_", " ")}</span>
-            <p class="font-bold">${q.question}</p>
-            <div class="flex flex-wrap gap-2">
+            <span class="label-caps mb-2">${q.key.replace("_", " ")}</span>
+            <p class="font-medium text-lg text-gray-900 mb-5">${q.question}</p>
+            <div class="flex flex-wrap gap-2 mt-auto">
               ${q.options
                 .map(
                   (opt) => `
                 <button
-                  class="btn-${q.key} px-4 py-2 rounded-lg border text-sm font-semibold"
+                  class="btn-modern btn-${q.key} px-5 py-2 text-sm font-medium"
                   onclick="setAnswer(this,'${q.key}','${opt}')"
                 >
                   ${opt}
                 </button>
-              `
+              `,
                 )
                 .join("")}
             </div>
           `;
-
           area.appendChild(card);
         });
       }
 
-      // FIXED: event handling + "Other"
       function setAnswer(el, key, val) {
         document.querySelectorAll(`.btn-${key}`).forEach((b) => {
-          b.classList.remove("bg-black", "text-white", "border-black");
+          b.classList.remove("active");
         });
-
-        el.classList.add("bg-black", "text-white", "border-black");
+        el.classList.add("active");
 
         if (val === "Other") {
           const custom = prompt("Please specify:");
@@ -211,74 +387,149 @@
         }
       }
 
-      // STEP 3 — GENERATE ROADMAP
+      // STEP 3 — GENERATE MAP
       async function generateFinalRoadmap() {
         showLoader(true);
 
         try {
           const res = await auth.authFetch(
-            "http://localhost:5500/roadmap/getRoadmap",
+            "https://st-v01.onrender.com/roadmap/getRoadmap",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                skill: "Software Development",
+                topic: document.getElementById("userInput").value,
                 duration_months: 6,
                 answers: selectedAnswers,
               }),
-            }
+            },
           );
 
-          const data = await res.json();
-          renderFinalRoadmap(data);
+          const result = await res.json();
+
+          if (!result.success) {
+            alert("Generation failed.");
+            return;
+          }
+
+          renderGameMap(result.roadmap);
 
           document.getElementById("step-2").classList.add("hidden");
           document.getElementById("step-3").classList.remove("hidden");
+
+          // Optimized drawing delay
+          setTimeout(drawPath, 50);
+
+          // Debounced resize listener for performance
+          let resizeTimer;
+          window.addEventListener("resize", () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(drawPath, 100);
+          });
         } catch (e) {
           console.error(e);
-          alert("Failed to generate roadmap");
+          alert("Error generating roadmap.");
         } finally {
           showLoader(false);
         }
       }
 
-      function renderFinalRoadmap(data) {
+      // --- RENDER THE MAP ---
+      function renderGameMap(data) {
         document.getElementById("roadmap-title").innerText =
           data.target_role || data.skill;
-
         document.getElementById("roadmap-lang").innerText =
           data.primary_language || "Curriculum";
 
-        const content = document.getElementById("roadmap-content");
-        content.innerHTML = data.roadmap
-          .map(
-            (month) => `
-          <div class="space-y-6">
-            <h3 class="text-2xl font-black">
-              Month ${month.month}: ${month.theme}
-            </h3>
-            <div class="grid md:grid-cols-4 gap-4">
-              ${month.weeks
-                .map(
-                  (week) => `
-                <div class="p-4 bg-gray-50 rounded-xl border">
-                  <span class="label-caps">Week ${week.week}</span>
-                  <p class="font-bold mt-2">${week.focus}</p>
-                  <ul class="text-xs text-gray-500 mt-2 space-y-1">
-                    ${week.tasks.map((t) => `<li>• ${t}</li>`).join("")}
+        const container = document.getElementById("levels-container");
+        container.innerHTML = "";
+
+        let globalWeekCount = 0;
+
+        data.roadmap.forEach((month, mIndex) => {
+          month.weeks.forEach((week, wIndex) => {
+            globalWeekCount++;
+            let positionClass = globalWeekCount % 2 === 0 ? "right" : "left";
+
+            const row = document.createElement("div");
+            row.className = `level-row ${positionClass}`;
+
+            row.innerHTML = `
+              <div class="level-card p-7">
+                  <div class="hanko-badge">${globalWeekCount}</div>
+                  <div class="anchor-dot"></div>
+
+                  <div class="mb-4">
+                     <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                       Month ${month.month} • Act ${week.week}
+                     </span>
+                  </div>
+                  
+                  <h3 class="text-xl font-bold mb-4 text-gray-900 leading-tight">${week.focus}</h3>
+                  
+                  <ul class="space-y-3 mb-6">
+                      ${week.tasks
+                        .slice(0, 3)
+                        .map(
+                          (t) => `
+                      <li class="flex items-start gap-3 text-sm text-gray-600">
+                          <span class="mt-1.5 w-1.5 h-1.5 bg-gray-300 rounded-full flex-shrink-0"></span>
+                          <span class="leading-relaxed">${t}</span>
+                      </li>
+                      `,
+                        )
+                        .join("")}
                   </ul>
-                  <p class="text-xs mt-3 font-semibold">
-                    ${week.outcome}
-                  </p>
-                </div>
-              `
-                )
-                .join("")}
-            </div>
-          </div>
-        `
-          )
-          .join("");
+                  
+                  <div class="pt-4 mt-auto border-t border-gray-100">
+                      <p class="text-sm font-medium text-[#d9381e]">
+                        Outcome: <span class="text-gray-800 font-normal">${week.outcome}</span>
+                      </p>
+                  </div>
+              </div>
+            `;
+            container.appendChild(row);
+          });
+        });
+      }
+
+      // --- SVG PATH CALCULATOR (Hardware Accelerated Line) ---
+      function drawPath() {
+        const anchors = document.querySelectorAll(".anchor-dot");
+        const svgContainer = document.getElementById("game-map");
+        const pathEl = document.getElementById("connector-path");
+
+        if (anchors.length < 2) return;
+
+        const containerRect = svgContainer.getBoundingClientRect();
+        let pathD = "";
+
+        anchors.forEach((anchor, index) => {
+          const rect = anchor.getBoundingClientRect();
+          const x = rect.left + rect.width / 2 - containerRect.left;
+          const y = rect.top + rect.height / 2 - containerRect.top;
+
+          if (index === 0) {
+            pathD += `M ${x} ${y}`;
+          } else {
+            const prevAnchor = anchors[index - 1];
+            const prevRect = prevAnchor.getBoundingClientRect();
+            const prevX =
+              prevRect.left + prevRect.width / 2 - containerRect.left;
+            const prevY =
+              prevRect.top + prevRect.height / 2 - containerRect.top;
+
+            // Keeps the organic S-curve logic, now drawing cleanly
+            const cp1x = prevX;
+            const cp1y = prevY + (y - prevY) / 2;
+            const cp2x = x;
+            const cp2y = prevY + (y - prevY) / 2;
+
+            pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x} ${y}`;
+          }
+        });
+
+        pathEl.setAttribute("d", pathD);
       }
     </script>
   </body>

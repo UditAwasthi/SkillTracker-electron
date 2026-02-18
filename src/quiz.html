@@ -175,7 +175,7 @@
         correctOptionIndex,
       }) {
         const res = await auth.authFetch(
-          "http://localhost:5500/course/submitAnswer",
+          "https://st-v01.onrender.com/course/submitAnswer",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -262,7 +262,7 @@
         mastery.completedQuizzes += 1;
         localStorage.setItem(masteryKey, JSON.stringify(mastery));
 
-        await fetch("http://localhost:5500/topic-progress/quiz/complete", {
+        await fetch("https://st-v01.onrender.com/topic-progress/quiz/complete", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

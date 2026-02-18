@@ -369,7 +369,7 @@
           const existingCourseIds = getCachedCourseIds();
 
           const res = await fetch(
-            "http://localhost:5500/content/getAllCourses",
+            "https://st-v01.onrender.com/content/getAllCourses",
             {
               method: "POST",
               headers: {
@@ -413,7 +413,7 @@
       async function fetchStats() {
         try {
           const res = await fetch(
-            "http://localhost:5500/learning-time/heatmap",
+            "https://st-v01.onrender.com/learning-time/heatmap",
             { headers: auth.getHeaders() },
           );
           if (res.ok) STATE.stats = await res.json();
@@ -427,7 +427,7 @@
       async function fetchCourseProgress(courseId) {
         try {
           const res = await fetch(
-            `http://localhost:5500/progress/${courseId}`,
+            `https://st-v01.onrender.com/progress/${courseId}`,
             { headers: auth.getHeaders() },
           );
 
@@ -456,7 +456,7 @@
           100,
         );
         if (progress === 100 && !courseProgress.completed) {
-          await auth.authFetch("http://localhost:5500/course/complete", {
+          await auth.authFetch("https://st-v01.onrender.com/course/complete", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ courseId: course.data._id }),
@@ -573,7 +573,7 @@
         DOM.loader.classList.add("flex");
 
         try {
-          const res = await fetch("http://localhost:5500/content", {
+          const res = await fetch("https://st-v01.onrender.com/content", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
